@@ -1,0 +1,1747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InsightFlow — Business Analytics Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Azeret+Mono:wght@300;400;500&family=Fraunces:ital,wght@0,300;0,700;1,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0b;--surface:#111114;--card:#18181c;--border:#2a2a32;--border2:#3a3a45;
+  --text:#e8e8ee;--muted:#6b6b7a;--dim:#3d3d48;
+  --acid:#c6f135;--acid2:#a8d622;--acid-dim:rgba(198,241,53,0.08);
+  --cyan:#22d3ee;--cyan-dim:rgba(34,211,238,0.08);
+  --amber:#f59e0b;--amber-dim:rgba(245,158,11,0.08);
+  --rose:#f43f5e;--rose-dim:rgba(244,63,94,0.08);
+  --violet:#8b5cf6;--violet-dim:rgba(139,92,246,0.08);
+  --syne:'Syne',sans-serif;--mono:'Azeret Mono',monospace;--serif:'Fraunces',serif;
+  --nav:56px;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--syne);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* scrollbar */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;height:var(--nav);background:rgba(10,10,11,0.95);backdrop-filter:blur(20px);z-index:1000;display:flex;align-items:center;justify-content:space-between;padding:0 2rem;border-bottom:1px solid var(--border)}
+.nav-brand{display:flex;align-items:center;gap:10px;cursor:pointer}
+.nav-logo-box{width:28px;height:28px;background:var(--acid);border-radius:4px;display:flex;align-items:center;justify-content:center}
+.nav-logo-inner{width:14px;height:14px;background:var(--bg);border-radius:2px;position:relative}
+.nav-logo-inner::after{content:'';position:absolute;top:3px;left:3px;right:3px;bottom:3px;background:var(--acid);border-radius:1px}
+.nav-wordmark{font-family:var(--syne);font-size:17px;font-weight:800;color:var(--text);letter-spacing:-0.02em}
+.nav-wordmark span{color:var(--acid)}
+.nav-links{display:flex;gap:2px}
+.nav-link{font-family:var(--mono);font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);padding:6px 14px;border-radius:4px;cursor:pointer;transition:all 0.15s;border:none;background:none}
+.nav-link:hover{color:var(--text);background:rgba(255,255,255,0.05)}
+.nav-link.active{color:var(--acid);background:var(--acid-dim)}
+.nav-right{display:flex;align-items:center;gap:10px}
+.nav-status{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--acid);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px}
+.hamburger span{width:20px;height:1.5px;background:var(--text);transition:all 0.2s}
+.mob-menu{display:none;position:fixed;top:var(--nav);left:0;right:0;background:var(--surface);border-bottom:1px solid var(--border);padding:1rem 2rem;z-index:999;flex-direction:column;gap:4px}
+.mob-menu.open{display:flex}
+.mob-link{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);padding:10px 0;border:none;background:none;text-align:left;cursor:pointer;border-bottom:1px solid var(--border)}
+.mob-link:hover{color:var(--text)}
+@media(max-width:700px){.nav-links,.nav-right{display:none}.hamburger{display:flex}}
+
+/* ── PAGES ── */
+.page{display:none;padding-top:var(--nav);min-height:100vh}
+.page.active{display:block;animation:pin 0.3s ease}
+@keyframes pin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ══════════════════════════════════════
+   HOME PAGE
+══════════════════════════════════════ */
+.hero{min-height:calc(100vh - var(--nav));display:flex;flex-direction:column;justify-content:center;padding:4rem 3rem;position:relative;overflow:hidden}
+.hero-grid-bg{position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:60px 60px;opacity:0.3;pointer-events:none}
+.hero-glow{position:absolute;top:-20%;right:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(198,241,53,0.06) 0%,transparent 70%);pointer-events:none}
+.hero-inner{max-width:900px;position:relative;z-index:1}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--acid);background:var(--acid-dim);border:1px solid rgba(198,241,53,0.2);padding:5px 14px;border-radius:20px;margin-bottom:2rem}
+.hero-h1{font-family:var(--syne);font-size:clamp(3rem,8vw,6.5rem);font-weight:800;line-height:0.95;letter-spacing:-0.03em;margin-bottom:1.5rem}
+.hero-h1 .line2{display:block;color:var(--acid);font-family:var(--serif);font-style:italic;font-weight:300;font-size:clamp(2.5rem,7vw,5.5rem)}
+.hero-sub{font-size:1.05rem;color:var(--muted);max-width:520px;line-height:1.75;margin-bottom:2.5rem;font-weight:400}
+.hero-ctas{display:flex;gap:12px;flex-wrap:wrap}
+.btn-acid{font-family:var(--syne);font-size:14px;font-weight:700;padding:13px 28px;background:var(--acid);color:var(--bg);border:none;border-radius:6px;cursor:pointer;transition:all 0.2s;letter-spacing:-0.01em}
+.btn-acid:hover{background:var(--acid2);transform:translateY(-1px)}
+.btn-ghost{font-family:var(--mono);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;padding:13px 22px;background:transparent;color:var(--muted);border:1px solid var(--border2);border-radius:6px;cursor:pointer;transition:all 0.2s}
+.btn-ghost:hover{border-color:var(--text);color:var(--text)}
+.hero-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-top:4rem;max-width:700px}
+.hero-stat{background:var(--surface);padding:1.25rem 1.5rem}
+.hero-stat-n{font-family:var(--syne);font-size:1.8rem;font-weight:800;color:var(--acid)}
+.hero-stat-l{font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+@media(max-width:600px){.hero-stats{grid-template-columns:repeat(2,1fr)}}
+
+.feat-section{padding:5rem 3rem;max-width:1200px;margin:0 auto}
+.sect-label{font-family:var(--mono);font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--acid);margin-bottom:0.75rem}
+.sect-h2{font-family:var(--syne);font-size:clamp(2rem,4vw,3rem);font-weight:800;letter-spacing:-0.02em;margin-bottom:1rem;line-height:1.1}
+.sect-sub{font-size:0.95rem;color:var(--muted);max-width:500px;line-height:1.75;margin-bottom:3rem}
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.feat-card{background:var(--surface);padding:2rem;cursor:pointer;transition:background 0.2s;position:relative;overflow:hidden}
+.feat-card:hover{background:var(--card)}
+.feat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--acid);transform:scaleX(0);transition:transform 0.2s;transform-origin:left}
+.feat-card:hover::before{transform:scaleX(1)}
+.feat-icon{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:1.25rem}
+.feat-num{font-family:var(--mono);font-size:10px;letter-spacing:0.1em;color:var(--dim);margin-bottom:0.5rem}
+.feat-name{font-family:var(--syne);font-size:1.1rem;font-weight:700;margin-bottom:0.5rem}
+.feat-desc{font-size:13px;color:var(--muted);line-height:1.6}
+.feat-link{font-family:var(--mono);font-size:10px;letter-spacing:0.08em;color:var(--acid);margin-top:1rem;display:block;text-transform:uppercase}
+
+.flow-section{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:5rem 3rem}
+.flow-inner{max-width:1000px;margin:0 auto}
+.flow-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0;margin-top:3rem;position:relative}
+.flow-steps::before{content:'';position:absolute;top:20px;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,var(--border2),var(--border2),transparent);z-index:0}
+.flow-step{text-align:center;padding:0 1rem;position:relative;z-index:1}
+.flow-num{width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;font-weight:500;color:var(--acid);margin:0 auto 1rem}
+.flow-title{font-family:var(--syne);font-size:0.95rem;font-weight:700;margin-bottom:0.5rem}
+.flow-desc{font-size:12px;color:var(--muted);line-height:1.55}
+
+.cta-strip{background:var(--acid);padding:3.5rem 3rem;text-align:center}
+.cta-strip-h{font-family:var(--syne);font-size:2rem;font-weight:800;color:var(--bg);letter-spacing:-0.02em;margin-bottom:0.5rem}
+.cta-strip-s{font-size:0.95rem;color:rgba(10,10,11,0.6);margin-bottom:1.5rem}
+.btn-dark{font-family:var(--syne);font-size:14px;font-weight:700;padding:13px 32px;background:var(--bg);color:var(--acid);border:none;border-radius:6px;cursor:pointer;transition:all 0.2s}
+.btn-dark:hover{background:#111;transform:translateY(-1px)}
+
+footer{background:var(--surface);border-top:1px solid var(--border);padding:2rem 3rem}
+.foot-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+.foot-copy{font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:0.05em}
+.foot-links{display:flex;gap:1.5rem}
+.foot-link{font-family:var(--mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--dim);cursor:pointer;transition:color 0.15s}
+.foot-link:hover{color:var(--muted)}
+
+/* ══════════════════════════════════════
+   ANALYZER PAGE
+══════════════════════════════════════ */
+.tool-wrap{max-width:1100px;margin:0 auto;padding:2.5rem 2rem 4rem}
+.tool-head{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)}
+.tool-ey{font-family:var(--mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--acid);margin-bottom:6px}
+.tool-h1{font-family:var(--syne);font-size:clamp(1.6rem,4vw,2.4rem);font-weight:800;letter-spacing:-0.02em;line-height:1.1}
+.tool-sub{font-size:12px;color:var(--muted);margin-top:4px;font-family:var(--mono)}
+.priv-badge{font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;background:var(--acid-dim);color:var(--acid);border:1px solid rgba(198,241,53,0.2);padding:5px 12px;border-radius:3px;white-space:nowrap}
+
+/* DROP ZONE */
+.drop-zone{border:1.5px dashed var(--border2);border-radius:12px;padding:3.5rem 2rem;text-align:center;cursor:pointer;transition:all 0.2s;position:relative;background:var(--surface);margin-bottom:1.5rem}
+.drop-zone:hover,.drop-zone.drag{border-color:var(--acid);background:var(--acid-dim)}
+.drop-zone.drag{border-style:solid}
+.drop-icon{font-size:3rem;margin-bottom:1rem;display:block;filter:grayscale(1);transition:filter 0.2s}
+.drop-zone:hover .drop-icon,.drop-zone.drag .drop-icon{filter:none}
+.drop-title{font-family:var(--syne);font-size:1.1rem;font-weight:700;margin-bottom:6px}
+.drop-sub{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:0.04em}
+.drop-types{display:flex;justify-content:center;gap:8px;margin-top:1rem;flex-wrap:wrap}
+.type-pill{font-family:var(--mono);font-size:10px;padding:3px 10px;border:1px solid var(--border2);border-radius:3px;color:var(--muted)}
+#fileIn{display:none}
+.file-loaded{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:1rem;font-family:var(--mono);font-size:12px}
+.file-loaded-icon{font-size:18px}
+.file-loaded-name{color:var(--acid);flex:1}
+.file-loaded-size{color:var(--muted)}
+.file-clear{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:3px;transition:all 0.15s}
+.file-clear:hover{background:var(--rose-dim);color:var(--rose)}
+
+/* OR divider */
+.or-div{display:flex;align-items:center;gap:12px;margin-bottom:1.5rem}
+.or-line{flex:1;height:1px;background:var(--border)}
+.or-text{font-family:var(--mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim)}
+
+/* PASTE AREA */
+.paste-panel{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:1.5rem}
+.paste-hdr{background:var(--card);padding:8px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.paste-hdr-title{font-family:var(--mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)}
+textarea.data-paste{width:100%;height:160px;background:var(--surface);border:none;padding:14px;font-family:var(--mono);font-size:11.5px;line-height:1.7;color:var(--text);resize:vertical;outline:none}
+textarea.data-paste::placeholder{color:var(--dim)}
+textarea.data-paste:focus{background:var(--card)}
+
+/* CONTEXT ROW */
+.context-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:1.5rem}
+@media(max-width:600px){.context-row{grid-template-columns:1fr}}
+.field-lbl{font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;display:block}
+select,input[type=text]{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:9px 12px;font-family:var(--mono);font-size:12px;color:var(--text);outline:none;transition:border-color 0.15s;appearance:none}
+select:focus,input[type=text]:focus{border-color:var(--acid)}
+select option{background:var(--card)}
+
+.run-bar{display:flex;align-items:center;gap:16px;margin-bottom:2rem}
+.rl{flex:1;height:1px;background:var(--border)}
+.run-btn{font-family:var(--syne);font-size:15px;font-weight:800;letter-spacing:-0.01em;padding:13px 40px;background:var(--acid);color:var(--bg);border:none;border-radius:8px;cursor:pointer;transition:all 0.2s;white-space:nowrap}
+.run-btn:hover{background:var(--acid2);transform:translateY(-1px)}
+.run-btn:disabled{background:var(--dim);color:var(--muted);cursor:not-allowed;transform:none}
+
+/* RESULTS */
+.results{display:none}
+.results.show{display:block;animation:pin 0.4s ease}
+
+/* thinking */
+.thinking-bar{display:flex;align-items:center;gap:12px;padding:1rem 1.25rem;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:1.5rem;font-family:var(--mono);font-size:11px;color:var(--muted);display:none}
+.thinking-bar.show{display:flex}
+.think-dots{display:flex;gap:4px}
+.think-dots span{width:5px;height:5px;border-radius:50%;background:var(--acid);animation:tdot 1.2s infinite}
+.think-dots span:nth-child(2){animation-delay:0.2s}.think-dots span:nth-child(3){animation-delay:0.4s}
+@keyframes tdot{0%,80%,100%{transform:scale(0.6);opacity:0.4}40%{transform:scale(1);opacity:1}}
+
+/* KPI TILES */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:1.5rem}
+.kpi-tile{background:var(--surface);padding:1.25rem;position:relative;overflow:hidden}
+.kpi-tile::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--acid);opacity:0.4}
+.kpi-label{font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.kpi-value{font-family:var(--syne);font-size:1.8rem;font-weight:800;letter-spacing:-0.02em;color:var(--text);line-height:1}
+.kpi-delta{font-family:var(--mono);font-size:10px;margin-top:5px}
+.kpi-delta.up{color:var(--acid)}.kpi-delta.down{color:var(--rose)}.kpi-delta.neu{color:var(--muted)}
+
+/* INSIGHT NARRATIVE */
+.narrative-card{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:1.5rem}
+.nc-hdr{background:var(--card);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.nc-title{font-family:var(--syne);font-size:13px;font-weight:700;letter-spacing:-0.01em}
+.nc-badge{font-family:var(--mono);font-size:9px;padding:2px 10px;border-radius:3px;letter-spacing:0.08em;text-transform:uppercase}
+.nc-body{padding:1.5rem;font-size:14px;line-height:1.85;color:var(--text);background:var(--surface)}
+.nc-body strong{color:var(--acid);font-weight:600}
+
+/* CHARTS SECTION */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem}
+@media(max-width:700px){.charts-grid{grid-template-columns:1fr}}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.chart-hdr{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.chart-title{font-family:var(--syne);font-size:13px;font-weight:700;letter-spacing:-0.01em}
+.chart-sub{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:2px}
+.chart-type-switcher{display:flex;gap:4px}
+.cts-btn{font-family:var(--mono);font-size:9px;padding:3px 9px;border:1px solid var(--border);border-radius:3px;cursor:pointer;background:none;color:var(--muted);transition:all 0.15s;text-transform:uppercase;letter-spacing:0.05em}
+.cts-btn.active,.cts-btn:hover{background:var(--acid);color:var(--bg);border-color:var(--acid)}
+.chart-body{padding:1.25rem;height:260px;position:relative}
+
+.chart-full{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:1.5rem}
+.chart-full .chart-body{height:300px}
+
+/* DATA TABLE */
+.table-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:1.5rem}
+.table-hdr-row{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap}
+.table-search{background:var(--card);border:1px solid var(--border);border-radius:5px;padding:6px 12px;font-family:var(--mono);font-size:11px;color:var(--text);outline:none;width:200px;transition:border-color 0.15s}
+.table-search:focus{border-color:var(--acid)}
+.table-wrap{overflow-x:auto;max-height:320px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead{position:sticky;top:0;z-index:1}
+th{background:var(--card);padding:10px 14px;text-align:left;font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+th:hover{color:var(--acid)}
+td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;white-space:nowrap}
+tr:hover td{background:var(--card)}
+.td-num{color:var(--acid);text-align:right}
+.td-pos{color:var(--acid)}.td-neg{color:var(--rose)}
+
+/* COLUMN STATS */
+.col-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin-bottom:1.5rem}
+.col-stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem}
+.col-stat-name{font-family:var(--syne);font-size:12px;font-weight:700;color:var(--acid);margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.col-stat-row{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;padding:3px 0;border-bottom:1px solid var(--border);color:var(--muted)}
+.col-stat-row:last-child{border:none}
+.col-stat-val{color:var(--text)}
+
+/* RECS */
+.recs-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-bottom:1.5rem}
+.rec-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.25rem;position:relative;overflow:hidden;transition:border-color 0.2s}
+.rec-card:hover{border-color:var(--border2)}
+.rec-card-accent{position:absolute;top:0;left:0;bottom:0;width:3px}
+.rec-priority{font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;display:inline-block;padding:2px 8px;border-radius:2px}
+.rec-title{font-family:var(--syne);font-size:14px;font-weight:700;margin-bottom:5px;letter-spacing:-0.01em}
+.rec-body{font-size:12px;color:var(--muted);line-height:1.6}
+
+/* BOTTOM ROW */
+.bottom-row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding-top:8px}
+.act-btn{font-family:var(--mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;padding:7px 16px;border:1px solid var(--border2);border-radius:5px;cursor:pointer;background:var(--surface);color:var(--muted);transition:all 0.15s}
+.act-btn:hover{border-color:var(--text);color:var(--text)}
+.act-btn.primary{background:var(--acid-dim);border-color:rgba(198,241,53,0.3);color:var(--acid)}
+.act-btn.primary:hover{background:var(--acid);color:var(--bg);border-color:var(--acid)}
+
+.err-box{border:1px solid var(--rose);border-radius:8px;padding:12px 16px;background:var(--rose-dim);color:var(--rose);font-family:var(--mono);font-size:11px;margin-bottom:1rem;display:none}
+.notice{font-family:var(--mono);font-size:10px;color:var(--dim);text-align:center;padding:8px;letter-spacing:0.04em}
+
+/* ══════════════════════════════════════
+   DASHBOARD PAGE
+══════════════════════════════════════ */
+.dash-wrap{max-width:1100px;margin:0 auto;padding:2rem 2rem 4rem}
+.dash-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem}
+.dash-h1{font-family:var(--syne);font-size:1.5rem;font-weight:800;letter-spacing:-0.02em}
+.dash-subtitle{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px}
+.dash-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;gap:1rem}
+.dash-empty-icon{font-size:3rem;filter:grayscale(1);opacity:0.3}
+.dash-empty-title{font-family:var(--syne);font-size:1.1rem;font-weight:700;color:var(--muted)}
+.dash-empty-sub{font-family:var(--mono);font-size:11px;color:var(--dim);max-width:300px;line-height:1.6}
+.dash-full{display:none}
+.dash-full.show{display:block}
+
+.dash-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:1.5rem}
+.dash-kpi{background:var(--surface);padding:1.25rem;position:relative}
+.dash-kpi::after{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--acid);opacity:0.5}
+.dash-kpi-val{font-family:var(--syne);font-size:1.6rem;font-weight:800;letter-spacing:-0.02em}
+.dash-kpi-lbl{font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-top:3px}
+.dash-kpi-trend{font-family:var(--mono);font-size:10px;margin-top:4px}
+
+.dash-charts{display:grid;grid-template-columns:2fr 1fr;gap:1.5rem;margin-bottom:1.5rem}
+@media(max-width:800px){.dash-charts{grid-template-columns:1fr}}
+.dash-table-wrap{overflow-x:auto}
+
+/* ══════════════════════════════════════
+   REPORTS PAGE
+══════════════════════════════════════ */
+.reports-wrap{max-width:900px;margin:0 auto;padding:2.5rem 2rem 4rem}
+.report-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:50vh;gap:1rem;text-align:center}
+.reports-list{display:flex;flex-direction:column;gap:12px;display:none}
+.reports-list.show{display:flex}
+.report-item{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.25rem 1.5rem;display:flex;align-items:center;gap:1rem;transition:border-color 0.2s}
+.report-item:hover{border-color:var(--border2)}
+.report-item-icon{font-size:1.5rem;flex-shrink:0}
+.report-item-body{flex:1}
+.report-item-title{font-family:var(--syne);font-size:14px;font-weight:700;margin-bottom:2px}
+.report-item-meta{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:0.04em}
+.report-item-actions{display:flex;gap:8px;flex-shrink:0}
+
+/* ══════════════════════════════════════
+   SETTINGS PAGE
+══════════════════════════════════════ */
+.settings-wrap{max-width:700px;margin:0 auto;padding:2.5rem 2rem 4rem}
+.settings-section{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:1.5rem}
+.settings-section-hdr{background:var(--card);padding:12px 16px;border-bottom:1px solid var(--border)}
+.settings-section-title{font-family:var(--syne);font-size:13px;font-weight:700}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);gap:12px;flex-wrap:wrap}
+.settings-row:last-child{border:none}
+.settings-row-label{font-size:13px;font-weight:600;margin-bottom:2px}
+.settings-row-sub{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:0.03em}
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--dim);border-radius:12px;cursor:pointer;transition:background 0.2s}
+.toggle-slider::before{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform 0.2s}
+.toggle input:checked+.toggle-slider{background:var(--acid)}
+.toggle input:checked+.toggle-slider::before{transform:translateX(20px)}
+.color-swatches{display:flex;gap:8px}
+.swatch{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color 0.15s}
+.swatch.active,.swatch:hover{border-color:var(--text)}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand" onclick="showPage('home')">
+    <div class="nav-logo-box"><div class="nav-logo-inner"></div></div>
+    <span class="nav-wordmark">Insight<span>Flow</span></span>
+  </div>
+  <div class="nav-links">
+    <button class="nav-link active" onclick="showPage('home')">Home</button>
+    <button class="nav-link" onclick="showPage('analyzer')">Analyzer</button>
+    <button class="nav-link" onclick="showPage('dashboard')">Dashboard</button>
+    <button class="nav-link" onclick="showPage('reports')">Reports</button>
+    <button class="nav-link" onclick="showPage('settings')">Settings</button>
+  </div>
+  <div class="nav-right">
+    <div class="nav-status"><div class="status-dot"></div>Live</div>
+  </div>
+  <div class="hamburger" onclick="toggleMob()" id="hamb"><span></span><span></span><span></span></div>
+</nav>
+<div class="mob-menu" id="mobMenu">
+  <button class="mob-link" onclick="showPage('home');toggleMob()">Home</button>
+  <button class="mob-link" onclick="showPage('analyzer');toggleMob()">Analyzer</button>
+  <button class="mob-link" onclick="showPage('dashboard');toggleMob()">Dashboard</button>
+  <button class="mob-link" onclick="showPage('reports');toggleMob()">Reports</button>
+  <button class="mob-link" onclick="showPage('settings');toggleMob()">Settings</button>
+</div>
+
+<!-- ════════════════════ HOME ════════════════════ -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <div class="hero-grid-bg"></div>
+    <div class="hero-glow"></div>
+    <div class="hero-inner">
+      <div class="hero-badge"><span class="status-dot"></span>AI-Powered Business Analytics</div>
+      <h1 class="hero-h1">Your data,<br><span class="line2">decoded instantly.</span></h1>
+      <p class="hero-sub">Drop any Excel, CSV, or text file and get deep business insights, interactive charts, statistical analysis, and AI-generated recommendations — in seconds.</p>
+      <div class="hero-ctas">
+        <button class="btn-acid" onclick="showPage('analyzer')">Drop a File &amp; Analyze →</button>
+        <button class="btn-ghost" onclick="showPage('dashboard')">View Dashboard</button>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><div class="hero-stat-n">12+</div><div class="hero-stat-l">chart types</div></div>
+        <div class="hero-stat"><div class="hero-stat-n">xlsx</div><div class="hero-stat-l">csv · txt · json</div></div>
+        <div class="hero-stat"><div class="hero-stat-n">100%</div><div class="hero-stat-l">client-side</div></div>
+        <div class="hero-stat"><div class="hero-stat-n">0</div><div class="hero-stat-l">data uploaded</div></div>
+      </div>
+    </div>
+  </div>
+
+  <section class="feat-section">
+    <div class="sect-label">Platform Features</div>
+    <h2 class="sect-h2">Everything in one place.</h2>
+    <p class="sect-sub">From raw spreadsheet to board-ready insights without leaving your browser.</p>
+    <div class="feat-grid">
+      <div class="feat-card" onclick="showPage('analyzer')">
+        <div class="feat-icon" style="background:var(--acid-dim);font-size:20px">📊</div>
+        <div class="feat-num">01</div>
+        <div class="feat-name">Smart Analyzer</div>
+        <div class="feat-desc">Drop Excel, CSV, JSON, or plain text. Get instant KPIs, trend detection, correlation analysis, and column-level statistics.</div>
+        <span class="feat-link">Open Analyzer →</span>
+      </div>
+      <div class="feat-card" onclick="showPage('dashboard')">
+        <div class="feat-icon" style="background:var(--cyan-dim);font-size:20px">⬡</div>
+        <div class="feat-num">02</div>
+        <div class="feat-name">Live Dashboard</div>
+        <div class="feat-desc">Auto-generated dashboard from your data. Bar, line, pie, scatter — switch charts on the fly, filter by column.</div>
+        <span class="feat-link">View Dashboard →</span>
+      </div>
+      <div class="feat-card" onclick="showPage('reports')">
+        <div class="feat-icon" style="background:var(--amber-dim);font-size:20px">◈</div>
+        <div class="feat-num">03</div>
+        <div class="feat-name">Report History</div>
+        <div class="feat-desc">Every analysis you run is saved as a report. Copy findings, export JSON, or regenerate charts from previous sessions.</div>
+        <span class="feat-link">See Reports →</span>
+      </div>
+      <div class="feat-card" onclick="showPage('analyzer')">
+        <div class="feat-icon" style="background:var(--violet-dim);font-size:20px">✦</div>
+        <div class="feat-num">04</div>
+        <div class="feat-name">AI Insights</div>
+        <div class="feat-desc">Pattern detection, anomaly flagging, trend narratives, and strategic recommendations — generated from your actual data.</div>
+        <span class="feat-link">Try It →</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="flow-section">
+    <div class="flow-inner">
+      <div class="sect-label">AI Workflow Pipeline</div>
+      <h2 class="sect-h2">How InsightFlow thinks.</h2>
+      <p style="font-size:0.9rem;color:var(--muted);max-width:580px;line-height:1.75;margin-top:0.5rem">Every file you drop goes through a structured 7-stage pipeline. Here is exactly what happens between upload and insight.</p>
+
+      <!-- WORKFLOW DIAGRAM -->
+      <div style="margin-top:2.5rem;display:flex;flex-direction:column;gap:0">
+
+        <!-- Stage row helper: each stage is a card connected by an arrow -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+
+          <div style="background:var(--card);padding:1.25rem;position:relative">
+            <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--acid);margin-bottom:8px">Stage 01</div>
+            <div style="font-family:var(--syne);font-size:13px;font-weight:700;margin-bottom:6px">File Upload</div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.55">User drops .xlsx, .csv, .json, .tsv, or .txt. File is read entirely in the browser — nothing is transmitted.</div>
+          </div>
+
+          <div style="background:var(--surface);padding:1.25rem">
+            <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--cyan);margin-bottom:8px">Stage 02</div>
+            <div style="font-family:var(--syne);font-size:13px;font-weight:700;margin-bottom:6px">Parse & Clean</div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.55">RFC 4180-compliant CSV tokenizer handles quoted fields, commas in text, and special characters. Rows are validated and empty entries filtered.</div>
+          </div>
+
+          <div style="background:var(--card);padding:1.25rem">
+            <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--amber);margin-bottom:8px">Stage 03</div>
+            <div style="font-family:var(--syne);font-size:13px;font-weight:700;margin-bottom:6px">Classify Columns</div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.55">Each column is tested for numeric parseability. Columns with ≥60% numeric values become metrics. The rest become category labels for chart axes.</div>
+          </div>
+
+          <div style="background:var(--surface);padding:1.25rem">
+            <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--violet);margin-bottom:8px">Stage 04</div>
+            <div style="font-family:var(--syne);font-size:13px;font-weight:700;margin-bottom:6px">Compute Statistics</div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.55">Mean, median, standard deviation, min, max, Q1, Q3, growth rate, and anomaly count computed per numeric column. Anomalies flagged at &gt;2σ from mean.</div>
+          </div>
+
+          <div style="background:var(--card);padding:1.25rem">
+            <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--rose);margin-bottom:8px">Stage 05</div>
+            <div style="font-family:var(--syne);font-size:13px;font-weight:700;margin-bottom:6px">Detect Trends</div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.55">First and second halves of each series are compared. If the second half average exceeds the first by &gt;10%, the trend is marked upward. Below −10% is downward.</div>
+          </div>
+
+          <div style="background:var(--surface);padding:1.25rem">
+            <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--acid);margin-bottom:8px">Stage 06</div>
+            <div style="font-family:var(--syne);font-size:13px;font-weight:700;margin-bottom:6px">Generate Charts</div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.55">Charts are built dynamically from detected columns — not templates. Numeric columns become Y-axis values; categorical columns become labels. Chart type is user-switchable.</div>
+          </div>
+
+          <div style="background:var(--card);padding:1.25rem">
+            <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--cyan);margin-bottom:8px">Stage 07</div>
+            <div style="font-family:var(--syne);font-size:13px;font-weight:700;margin-bottom:6px">Surface Insights</div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.55">A plain-English narrative is generated from the computed statistics. Language is shaped by the selected business context (Sales, Finance, SaaS, etc.) to keep insights domain-relevant.</div>
+          </div>
+
+        </div>
+
+        <!-- Arrow flow label -->
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:1.25rem;flex-wrap:wrap">
+          <span style="font-family:var(--mono);font-size:10px;color:var(--dim)">Upload</span>
+          <span style="color:var(--border2)">──────→</span>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--dim)">Parse</span>
+          <span style="color:var(--border2)">──→</span>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--dim)">Classify</span>
+          <span style="color:var(--border2)">──→</span>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--dim)">Statistics</span>
+          <span style="color:var(--border2)">──→</span>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--dim)">Trends</span>
+          <span style="color:var(--border2)">──→</span>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--dim)">Charts</span>
+          <span style="color:var(--border2)">──→</span>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--acid);font-weight:600">Insights ✓</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cta-strip">
+    <div class="cta-strip-h">Ready to understand your data?</div>
+    <div class="cta-strip-s">Free. Private. No sign-up. Your files never leave your device.</div>
+    <button class="btn-dark" onclick="showPage('analyzer')">Start Analyzing →</button>
+  </div>
+
+  <footer>
+    <div class="foot-inner">
+      <div class="foot-copy">© 2025 InsightFlow · Runs entirely in your browser · Zero data transmission</div>
+      <div class="foot-links">
+        <span class="foot-link" onclick="showPage('analyzer')">Analyzer</span>
+        <span class="foot-link" onclick="showPage('dashboard')">Dashboard</span>
+        <span class="foot-link" onclick="showPage('reports')">Reports</span>
+        <span class="foot-link" onclick="showPage('settings')">Settings</span>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- ════════════════════ ANALYZER ════════════════════ -->
+<div class="page" id="page-analyzer">
+<div class="tool-wrap">
+  <div class="tool-head">
+    <div>
+      <div class="tool-ey">InsightFlow · Analyzer</div>
+      <div class="tool-h1">Business Data<br>Intelligence Engine</div>
+      <div class="tool-sub">Drop any file or paste data — instant insights</div>
+    </div>
+    <div class="priv-badge">🔒 100% client-side</div>
+  </div>
+
+  <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileIn').click()">
+    <div class="hero-grid-bg" style="opacity:0.1;border-radius:12px"></div>
+    <span class="drop-icon">⬆</span>
+    <div class="drop-title">Drop your file here</div>
+    <div class="drop-sub">or click to browse</div>
+    <div class="drop-types">
+      <span class="type-pill">.xlsx</span>
+      <span class="type-pill">.xls</span>
+      <span class="type-pill">.csv</span>
+      <span class="type-pill">.tsv</span>
+      <span class="type-pill">.json</span>
+      <span class="type-pill">.txt</span>
+    </div>
+    <input type="file" id="fileIn" accept=".xlsx,.xls,.csv,.tsv,.json,.txt">
+  </div>
+
+  <div class="file-loaded" id="fileLoaded" style="display:none">
+    <span class="file-loaded-icon">📄</span>
+    <span class="file-loaded-name" id="fileName">—</span>
+    <span class="file-loaded-size" id="fileSize">—</span>
+    <button class="file-clear" onclick="clearFile()">✕</button>
+  </div>
+
+  <div class="or-div"><div class="or-line"></div><div class="or-text">or paste data</div><div class="or-line"></div></div>
+
+  <div class="paste-panel">
+    <div class="paste-hdr">
+      <span class="paste-hdr-title">Paste CSV, JSON, or tab-separated data</span>
+      <button class="act-btn" onclick="loadSampleData()">Load Sample</button>
+    </div>
+    <textarea class="data-paste" id="pasteData" placeholder="Paste your data here...
+
+Month,Revenue,Expenses,Profit,Customers
+Jan,125000,89000,36000,1240
+Feb,138000,91000,47000,1380
+..."></textarea>
+  </div>
+
+  <div class="context-row">
+    <div class="field-group">
+      <label class="field-lbl">Business Context</label>
+      <select id="bizContext">
+        <option value="general">General Business</option>
+        <option value="sales">Sales & Revenue</option>
+        <option value="marketing">Marketing Analytics</option>
+        <option value="finance">Financial Analysis</option>
+        <option value="ops">Operations & Logistics</option>
+        <option value="hr">HR & Workforce</option>
+        <option value="ecommerce">E-Commerce</option>
+        <option value="saas">SaaS Metrics</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label class="field-lbl">Analysis Depth</label>
+      <select id="analysisDepth">
+        <option value="standard">Standard</option>
+        <option value="deep">Deep Dive</option>
+        <option value="executive">Executive Summary</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label class="field-lbl">Your Question (optional)</label>
+      <input type="text" id="userQ" placeholder="e.g. What's driving the Q3 dip?">
+    </div>
+  </div>
+
+  <div class="run-bar">
+    <div class="rl"></div>
+    <button class="run-btn" id="runBtn" onclick="runAnalysis()">Generate Insights →</button>
+    <div class="rl"></div>
+  </div>
+  <div class="err-box" id="errBox"></div>
+
+  <div class="thinking-bar" id="thinkBar">
+    <div class="think-dots"><span></span><span></span><span></span></div>
+    <span id="thinkMsg">Parsing your data…</span>
+  </div>
+
+  <div class="results" id="resultsArea">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:1.5rem">
+      <div style="background:var(--surface);padding:1rem 1.25rem;display:flex;gap:10px;align-items:flex-start">
+        <span style="font-size:16px;flex-shrink:0">🧠</span>
+        <div>
+          <div style="font-family:var(--syne);font-size:12px;font-weight:700;margin-bottom:3px">Context-Aware Insights</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.55">Narrative language is shaped by your selected business context — a Sales dataset reads differently from an HR or SaaS one.</div>
+        </div>
+      </div>
+      <div style="background:var(--card);padding:1rem 1.25rem;display:flex;gap:10px;align-items:flex-start">
+        <span style="font-size:16px;flex-shrink:0">⚠️</span>
+        <div>
+          <div style="font-family:var(--syne);font-size:12px;font-weight:700;margin-bottom:3px">Anomaly Detection</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.55">Values more than 2 standard deviations from the mean are automatically flagged so outliers don't silently skew your results.</div>
+        </div>
+      </div>
+      <div style="background:var(--surface);padding:1rem 1.25rem;display:flex;gap:10px;align-items:flex-start">
+        <span style="font-size:16px;flex-shrink:0">📊</span>
+        <div>
+          <div style="font-family:var(--syne);font-size:12px;font-weight:700;margin-bottom:3px">Dynamic Chart Building</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.55">Charts are constructed from your actual columns — numeric fields become metrics, categorical fields become labels. No hard-coded templates.</div>
+        </div>
+      </div>
+      <div style="background:var(--card);padding:1rem 1.25rem;display:flex;gap:10px;align-items:flex-start">
+        <span style="font-size:16px;flex-shrink:0">🔒</span>
+        <div>
+          <div style="font-family:var(--syne);font-size:12px;font-weight:700;margin-bottom:3px">100% Client-Side</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.55">All parsing, statistics, and chart generation run in your browser. Your data is never uploaded, stored, or transmitted anywhere.</div>
+        </div>
+      </div>
+    </div>
+    <div class="section-divider-line" style="height:1px;background:var(--border);margin-bottom:1.5rem"></div>
+
+    <!-- KPI TILES -->
+    <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--acid);margin-bottom:10px">Key Performance Indicators</div>
+    <div class="kpi-grid" id="kpiGrid"></div>
+
+    <!-- NARRATIVE -->
+    <div class="narrative-card" id="narrativeCard">
+      <div class="nc-hdr">
+        <div>
+          <span class="nc-title">AI Analysis Narrative</span>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:3px;letter-spacing:0.04em">Generated from computed statistics · shaped by your selected business context · anomalies flagged at &gt;2σ</div>
+        </div>
+        <span class="nc-badge" style="background:var(--acid-dim);color:var(--acid)">Generated</span>
+      </div>
+      <div class="nc-body" id="narrativeBody"></div>
+    </div>
+
+    <!-- CHARTS -->
+    <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--acid);margin-bottom:4px">Data Visualizations</div>
+    <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:12px;line-height:1.6">Charts are built dynamically from your data — not pre-made templates. Numeric columns become Y-axis values. Categorical columns become axis labels. Switch chart types using the toggles on each card.</div>
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-hdr">
+          <div><div class="chart-title" id="chart1Title">Primary Trend</div><div class="chart-sub" id="chart1Sub">—</div></div>
+          <div class="chart-type-switcher">
+            <button class="cts-btn active" onclick="switchChart(1,'bar',this)">Bar</button>
+            <button class="cts-btn" onclick="switchChart(1,'line',this)">Line</button>
+            <button class="cts-btn" onclick="switchChart(1,'area',this)">Area</button>
+          </div>
+        </div>
+        <div class="chart-body"><canvas id="chart1"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-hdr">
+          <div><div class="chart-title" id="chart2Title">Distribution</div><div class="chart-sub" id="chart2Sub">—</div></div>
+          <div class="chart-type-switcher">
+            <button class="cts-btn active" onclick="switchChart(2,'doughnut',this)">Donut</button>
+            <button class="cts-btn" onclick="switchChart(2,'pie',this)">Pie</button>
+            <button class="cts-btn" onclick="switchChart(2,'bar',this)">Bar</button>
+          </div>
+        </div>
+        <div class="chart-body"><canvas id="chart2"></canvas></div>
+      </div>
+    </div>
+    <div class="chart-full">
+      <div class="chart-hdr">
+        <div><div class="chart-title" id="chart3Title">Multi-Series Comparison</div><div class="chart-sub" id="chart3Sub">—</div></div>
+        <div class="chart-type-switcher">
+          <button class="cts-btn active" onclick="switchChart(3,'line',this)">Line</button>
+          <button class="cts-btn" onclick="switchChart(3,'bar',this)">Bar</button>
+        </div>
+      </div>
+      <div class="chart-body"><canvas id="chart3"></canvas></div>
+    </div>
+
+    <!-- COLUMN STATS -->
+    <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--acid);margin-bottom:10px">Column Statistics</div>
+    <div class="col-stats" id="colStats"></div>
+
+    <!-- DATA TABLE -->
+    <div class="table-card">
+      <div class="table-hdr-row">
+        <div class="chart-title">Data Preview</div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <input type="text" class="table-search" id="tableSearch" placeholder="Search data..." oninput="filterTable(this.value)">
+          <span style="font-family:var(--mono);font-size:10px;color:var(--muted)" id="tableCount"></span>
+        </div>
+      </div>
+      <div class="table-wrap"><table id="dataTable"><thead id="tableHead"></thead><tbody id="tableBody"></tbody></table></div>
+    </div>
+
+    <!-- RECOMMENDATIONS -->
+    <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--acid);margin-bottom:10px;margin-top:1.5rem">AI Recommendations</div>
+    <div class="recs-grid" id="recsGrid"></div>
+
+    <div class="bottom-row">
+      <button class="act-btn" onclick="copyReport()">Copy Report</button>
+      <button class="act-btn" onclick="exportJSON()">Export JSON</button>
+      <button class="act-btn primary" onclick="sendToDash()">Send to Dashboard →</button>
+      <button class="act-btn" onclick="resetAll()">New Analysis</button>
+    </div>
+    <div class="notice">All processing runs in your browser · Your data is never transmitted · Fully private</div>
+  </div>
+</div>
+</div>
+
+<!-- ════════════════════ DASHBOARD ════════════════════ -->
+<div class="page" id="page-dashboard">
+<div class="dash-wrap">
+  <div class="dash-head">
+    <div>
+      <div class="tool-ey">InsightFlow · Live Dashboard</div>
+      <div class="dash-h1" id="dashTitle">Dashboard</div>
+      <div class="dash-subtitle" id="dashSubtitle">No data loaded yet</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="act-btn" onclick="showPage('analyzer')">← Back to Analyzer</button>
+      <button class="act-btn primary" id="dashRefreshBtn" onclick="refreshDash()" style="display:none">Refresh</button>
+    </div>
+  </div>
+
+  <div class="dash-empty" id="dashEmpty">
+    <div class="dash-empty-icon">⬡</div>
+    <div class="dash-empty-title">No data loaded</div>
+    <div class="dash-empty-sub">Run an analysis first to populate the dashboard with your data.</div>
+    <button class="btn-acid" onclick="showPage('analyzer')" style="margin-top:0.5rem">Go to Analyzer →</button>
+  </div>
+
+  <div class="dash-full" id="dashFull">
+    <div class="dash-kpis" id="dashKpis"></div>
+    <div class="dash-charts">
+      <div class="chart-card">
+        <div class="chart-hdr"><div><div class="chart-title" id="dashChart1Title">Primary Trend</div></div></div>
+        <div class="chart-body" style="height:280px"><canvas id="dashChart1"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-hdr"><div><div class="chart-title" id="dashChart2Title">Distribution</div></div></div>
+        <div class="chart-body" style="height:280px"><canvas id="dashChart2"></canvas></div>
+      </div>
+    </div>
+    <div class="chart-full">
+      <div class="chart-hdr"><div><div class="chart-title" id="dashChart3Title">Comparison</div></div></div>
+      <div class="chart-body" style="height:280px"><canvas id="dashChart3"></canvas></div>
+    </div>
+    <div class="table-card">
+      <div class="table-hdr-row"><div class="chart-title">Data Table</div></div>
+      <div class="table-wrap dash-table-wrap"><table><thead id="dashThead"></thead><tbody id="dashTbody"></tbody></table></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ════════════════════ REPORTS ════════════════════ -->
+<div class="page" id="page-reports">
+<div class="reports-wrap">
+  <div class="tool-head" style="margin-bottom:2rem">
+    <div>
+      <div class="tool-ey">InsightFlow · Reports</div>
+      <div class="tool-h1">Analysis History</div>
+      <div class="tool-sub">Every analysis you run is saved here</div>
+    </div>
+    <button class="act-btn" onclick="clearReports()">Clear All</button>
+  </div>
+  <div class="report-empty" id="repEmpty">
+    <div class="dash-empty-icon">◈</div>
+    <div class="dash-empty-title">No reports yet</div>
+    <div class="dash-empty-sub">Run your first analysis to see reports here.</div>
+    <button class="btn-acid" onclick="showPage('analyzer')" style="margin-top:0.5rem">Analyze Data →</button>
+  </div>
+  <div class="reports-list" id="repList"></div>
+</div>
+</div>
+
+<!-- ════════════════════ SETTINGS ════════════════════ -->
+<div class="page" id="page-settings">
+<div class="settings-wrap">
+  <div class="tool-head" style="margin-bottom:2rem">
+    <div>
+      <div class="tool-ey">InsightFlow · Settings</div>
+      <div class="tool-h1">Preferences</div>
+      <div class="tool-sub">Customize your analytics experience</div>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-section-hdr"><div class="settings-section-title">Analysis Defaults</div></div>
+    <div class="settings-row">
+      <div><div class="settings-row-label">Auto-detect number formats</div><div class="settings-row-sub">Recognize $, %, K, M suffixes automatically</div></div>
+      <label class="toggle"><input type="checkbox" checked id="s-numfmt"><div class="toggle-slider"></div></label>
+    </div>
+    <div class="settings-row">
+      <div><div class="settings-row-label">Show column statistics</div><div class="settings-row-sub">Min, max, mean, median, standard deviation</div></div>
+      <label class="toggle"><input type="checkbox" checked id="s-colstats"><div class="toggle-slider"></div></label>
+    </div>
+    <div class="settings-row">
+      <div><div class="settings-row-label">Anomaly detection</div><div class="settings-row-sub">Flag values beyond 2σ from the mean</div></div>
+      <label class="toggle"><input type="checkbox" checked id="s-anomaly"><div class="toggle-slider"></div></label>
+    </div>
+    <div class="settings-row">
+      <div><div class="settings-row-label">Save reports automatically</div><div class="settings-row-sub">Store analysis history in browser memory</div></div>
+      <label class="toggle"><input type="checkbox" checked id="s-save"><div class="toggle-slider"></div></label>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-section-hdr"><div class="settings-section-title">Data Aggregation</div></div>
+    <div class="settings-row">
+      <div>
+        <div class="settings-row-label">Auto-aggregate large datasets</div>
+        <div class="settings-row-sub">When row count exceeds the threshold, group and average data before charting so charts stay readable</div>
+      </div>
+      <label class="toggle"><input type="checkbox" checked id="s-aggregate" onchange="saveAggSettings()"><div class="toggle-slider"></div></label>
+    </div>
+    <div class="settings-row">
+      <div>
+        <div class="settings-row-label">Row threshold</div>
+        <div class="settings-row-sub">Datasets with more rows than this will be aggregated automatically</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <input type="range" id="s-threshold" min="10" max="500" step="10" value="50"
+          oninput="document.getElementById('s-threshold-val').textContent=this.value+' rows';saveAggSettings()"
+          style="width:130px;accent-color:var(--acid);cursor:pointer;background:none;border:none;padding:0">
+        <span id="s-threshold-val" style="font-family:var(--mono);font-size:11px;color:var(--text);min-width:60px">50 rows</span>
+      </div>
+    </div>
+    <div class="settings-row">
+      <div>
+        <div class="settings-row-label">Aggregation method</div>
+        <div class="settings-row-sub">How numeric values are combined when rows are grouped together</div>
+      </div>
+      <select id="s-aggmethod" onchange="saveAggSettings()" style="width:130px;padding:6px 10px;font-size:11px">
+        <option value="avg">Average (mean)</option>
+        <option value="sum">Sum</option>
+        <option value="median">Median</option>
+        <option value="max">Maximum</option>
+        <option value="min">Minimum</option>
+      </select>
+    </div>
+    <div class="settings-row">
+      <div>
+        <div class="settings-row-label">Max chart points</div>
+        <div class="settings-row-sub">Target number of data points to show on charts after aggregation</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <input type="range" id="s-maxpoints" min="5" max="100" step="5" value="30"
+          oninput="document.getElementById('s-maxpoints-val').textContent=this.value+' pts';saveAggSettings()"
+          style="width:130px;accent-color:var(--acid);cursor:pointer;background:none;border:none;padding:0">
+        <span id="s-maxpoints-val" style="font-family:var(--mono);font-size:11px;color:var(--text);min-width:55px">30 pts</span>
+      </div>
+    </div>
+    <div class="settings-row" style="background:var(--acid-dim);border-color:rgba(198,241,53,0.15)">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.6">
+        <span style="color:var(--acid)">How it works:</span> When your file has more rows than the threshold, InsightFlow groups every N rows into a single bucket and averages (or sums/medians) the numeric values within each bucket. The label for each bucket is taken from the first row in that group. Charts stay readable regardless of file size.
+      </div>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-section-hdr"><div class="settings-section-title">Chart Appearance</div></div>
+    <div class="settings-row">
+      <div><div class="settings-row-label">Accent Color</div><div class="settings-row-sub">Primary color used in charts and highlights</div></div>
+      <div class="color-swatches">
+        <div class="swatch active" style="background:#c6f135" onclick="setAccent('#c6f135','#a8d622',this)"></div>
+        <div class="swatch" style="background:#22d3ee" onclick="setAccent('#22d3ee','#06b6d4',this)"></div>
+        <div class="swatch" style="background:#f59e0b" onclick="setAccent('#f59e0b','#d97706',this)"></div>
+        <div class="swatch" style="background:#8b5cf6" onclick="setAccent('#8b5cf6','#7c3aed',this)"></div>
+        <div class="swatch" style="background:#f43f5e" onclick="setAccent('#f43f5e','#e11d48',this)"></div>
+      </div>
+    </div>
+    <div class="settings-row">
+      <div><div class="settings-row-label">Animate charts on load</div><div class="settings-row-sub">Smooth entrance animation for chart elements</div></div>
+      <label class="toggle"><input type="checkbox" checked id="s-anim"><div class="toggle-slider"></div></label>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-section-hdr"><div class="settings-section-title">Data & Privacy</div></div>
+    <div class="settings-row">
+      <div><div class="settings-row-label">All processing is local</div><div class="settings-row-sub">Your files and data never leave your browser</div></div>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--acid);padding:3px 10px;background:var(--acid-dim);border-radius:3px">Always On</span>
+    </div>
+    <div class="settings-row">
+      <div><div class="settings-row-label">Clear all saved data</div><div class="settings-row-sub">Remove all reports and analysis history</div></div>
+      <button class="act-btn" onclick="clearAll()">Clear Data</button>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-section-hdr"><div class="settings-section-title">About InsightFlow</div></div>
+    <div class="settings-row"><div><div class="settings-row-label">Version</div><div class="settings-row-sub">InsightFlow Business Analytics v2.0</div></div><span style="font-family:var(--mono);font-size:10px;color:var(--muted)">2025</span></div>
+    <div class="settings-row"><div><div class="settings-row-label">Supported formats</div><div class="settings-row-sub">.xlsx, .xls, .csv, .tsv, .json, .txt</div></div></div>
+    <div class="settings-row"><div><div class="settings-row-label">Chart library</div><div class="settings-row-sub">Chart.js 4.4 · XLSX.js 0.18</div></div></div>
+  </div>
+</div>
+</div>
+
+<script>
+// ── AGGREGATION SETTINGS ──
+function saveAggSettings(){
+  const cfg={
+    enabled:document.getElementById('s-aggregate').checked,
+    threshold:parseInt(document.getElementById('s-threshold').value)||50,
+    method:document.getElementById('s-aggmethod').value,
+    maxPoints:parseInt(document.getElementById('s-maxpoints').value)||30
+  };
+  localStorage.setItem('if_agg',JSON.stringify(cfg));
+}
+function loadAggSettings(){
+  try{
+    const cfg=JSON.parse(localStorage.getItem('if_agg')||'{}');
+    if(cfg.enabled!==undefined)document.getElementById('s-aggregate').checked=cfg.enabled;
+    if(cfg.threshold){document.getElementById('s-threshold').value=cfg.threshold;document.getElementById('s-threshold-val').textContent=cfg.threshold+' rows';}
+    if(cfg.method)document.getElementById('s-aggmethod').value=cfg.method;
+    if(cfg.maxPoints){document.getElementById('s-maxpoints').value=cfg.maxPoints;document.getElementById('s-maxpoints-val').textContent=cfg.maxPoints+' pts';}
+  }catch(e){}
+}
+function getAggSettings(){
+  try{return JSON.parse(localStorage.getItem('if_agg')||'{}')}catch(e){return{}}
+}
+
+// ── AGGREGATION ENGINE ──
+// Groups rows into buckets and reduces numeric values by the chosen method.
+// labelCol is the column used for bucket labels (takes first row's value).
+// numCols are the columns to aggregate.
+// Returns {labels, aggRows} where aggRows is an array of averaged/summed objects.
+function aggregateData(rows,labelCol,numCols,settings){
+  const enabled=settings.enabled!==false; // default on
+  const threshold=settings.threshold||50;
+  const method=settings.method||'avg';
+  const maxPoints=settings.maxPoints||30;
+
+  if(!enabled||rows.length<=threshold){
+    // No aggregation — return raw, but still cap to maxPoints*10 for sanity
+    const capped=rows.slice(0,Math.min(rows.length,maxPoints*10));
+    return{labels:capped.map(r=>r[labelCol]),aggRows:capped,aggregated:false,originalCount:rows.length};
+  }
+
+  // Calculate bucket size so we end up with ~maxPoints buckets
+  const bucketSize=Math.max(1,Math.ceil(rows.length/maxPoints));
+  const buckets=[];
+  for(let i=0;i<rows.length;i+=bucketSize){
+    buckets.push(rows.slice(i,i+bucketSize));
+  }
+
+  const aggRows=buckets.map(bucket=>{
+    const obj={};
+    // Label: first row's label value
+    obj[labelCol]=bucket[0][labelCol];
+    // Aggregate each numeric col
+    numCols.forEach(col=>{
+      const vals=bucket.map(r=>coerceNum(r[col])).filter(v=>v!==null);
+      if(!vals.length){obj[col]=0;return;}
+      switch(method){
+        case'sum':    obj[col]=vals.reduce((a,b)=>a+b,0);break;
+        case'median': const s=[...vals].sort((a,b)=>a-b);obj[col]=s.length%2?s[Math.floor(s.length/2)]:(s[s.length/2-1]+s[s.length/2])/2;break;
+        case'max':    obj[col]=Math.max(...vals);break;
+        case'min':    obj[col]=Math.min(...vals);break;
+        default:      obj[col]=vals.reduce((a,b)=>a+b,0)/vals.length; // avg
+      }
+    });
+    return obj;
+  });
+
+  return{labels:aggRows.map(r=>r[labelCol]),aggRows,aggregated:true,originalCount:rows.length,bucketSize,method};
+}
+
+// ── GLOBALS ──
+let G={
+  parsed:null,headers:[],rows:[],numCols:[],catCols:[],
+  charts:{1:null,2:null,3:null,d1:null,d2:null,d3:null},
+  chartData:{},
+  reports:[],
+  accent:'#c6f135',accent2:'#a8d622'
+};
+
+// ── NAVIGATION ──
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav-link').forEach(l=>{
+    if(l.onclick&&l.onclick.toString().includes("'"+id+"'"))l.classList.add('active');
+  });
+  window.scrollTo(0,0);
+  if(id==='dashboard')renderDash();
+  if(id==='reports')renderReports();
+}
+function toggleMob(){document.getElementById('mobMenu').classList.toggle('open')}
+
+// ── FILE HANDLING ──
+const dz=document.getElementById('dropZone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0])});
+document.getElementById('fileIn').addEventListener('change',e=>{if(e.target.files[0])handleFile(e.target.files[0])});
+
+function handleFile(f){
+  const ext=f.name.split('.').pop().toLowerCase();
+  const sz=f.size<1024?f.size+'B':f.size<1048576?(f.size/1024).toFixed(1)+'KB':(f.size/1048576).toFixed(1)+'MB';
+  document.getElementById('fileName').textContent=f.name;
+  document.getElementById('fileSize').textContent=sz;
+  document.getElementById('fileLoaded').style.display='flex';
+  document.getElementById('pasteData').value='';
+  const reader=new FileReader();
+  if(['xlsx','xls'].includes(ext)){
+    reader.onload=ev=>{
+      const wb=XLSX.read(ev.target.result,{type:'binary'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const csv=XLSX.utils.sheet_to_csv(ws);
+      document.getElementById('pasteData').value=csv;
+    };
+    reader.readAsBinaryString(f);
+  } else if(ext==='json'){
+    reader.onload=ev=>{
+      try{
+        const data=JSON.parse(ev.target.result);
+        if(Array.isArray(data)&&data.length){
+          const keys=Object.keys(data[0]);
+          const csv=keys.join(',')+'\n'+data.map(r=>keys.map(k=>r[k]).join(',')).join('\n');
+          document.getElementById('pasteData').value=csv;
+        }
+      }catch(e){showErr('Could not parse JSON file.')}
+    };
+    reader.readAsText(f);
+  } else {
+    reader.onload=ev=>{document.getElementById('pasteData').value=ev.target.result};
+    reader.readAsText(f);
+  }
+}
+function clearFile(){
+  document.getElementById('fileLoaded').style.display='none';
+  document.getElementById('fileIn').value='';
+  document.getElementById('fileName').textContent='';
+}
+function loadSampleData(){
+  document.getElementById('pasteData').value=`Month,Revenue,Expenses,Profit,Customers,Leads,Conversion
+Jan,125000,89000,36000,1240,3200,38.75
+Feb,138000,91000,47000,1380,3450,40.00
+Mar,142000,95000,47000,1420,3600,39.44
+Apr,151000,98000,53000,1510,3900,38.72
+May,163000,102000,61000,1630,4100,39.76
+Jun,178000,108000,70000,1780,4400,40.45
+Jul,159000,103000,56000,1590,4200,37.86
+Aug,169000,106000,63000,1690,4350,38.85
+Sep,182000,112000,70000,1820,4600,39.57
+Oct,195000,118000,77000,1950,4900,39.80
+Nov,211000,125000,86000,2110,5200,40.58
+Dec,228000,132000,96000,2280,5600,40.71`;
+  document.getElementById('bizContext').value='sales';
+}
+
+// ── PARSE DATA ──
+function parseCSV(text){
+  // Detect delimiter from first non-empty line
+  const firstLine=text.trim().split('\n')[0]||'';
+  const delim=firstLine.includes('\t')?'\t':firstLine.includes(';')?';':',';
+
+  // RFC 4180-compliant tokenizer: handles quoted fields with commas, colons,
+  // newlines, and doubled-quote escapes ("") inside quoted strings.
+  function tokenizeLine(line, src, pos){
+    const fields=[];
+    let i=pos, len=src.length;
+    while(i<=len){
+      if(i===len||src[i]==='\r'||src[i]==='\n'){
+        // end of logical row
+        fields._end=i+(i<len&&src[i]==='\r'&&src[i+1]==='\n'?2:i<len?1:0);
+        return fields;
+      }
+      if(src[i]==='"'){
+        // quoted field
+        let val=''; i++;
+        while(i<len){
+          if(src[i]==='"'){
+            if(src[i+1]==='"'){val+='"';i+=2;} // escaped quote
+            else{i++;break;} // end of quoted field
+          } else { val+=src[i]; i++; }
+        }
+        // skip trailing delimiter
+        if(i<len&&src[i]===delim)i++;
+        fields.push(val.trim());
+      } else {
+        // unquoted field — read until delimiter or EOL
+        let start=i;
+        while(i<len&&src[i]!==delim&&src[i]!=='\r'&&src[i]!=='\n')i++;
+        fields.push(src.slice(start,i).trim().replace(/^['"]|['"]$/g,''));
+        if(i<len&&src[i]===delim)i++;
+      }
+    }
+    fields._end=i;
+    return fields;
+  }
+
+  // Walk through entire source respecting quoted newlines
+  const src=text.trim();
+  const allRows=[];
+  let pos=0;
+  while(pos<src.length){
+    const row=tokenizeLine(null,src,pos);
+    pos=row._end;
+    delete row._end;
+    if(row.length>0&&row.some(v=>v!==''))allRows.push(row);
+  }
+
+  if(allRows.length<2)return null;
+  const hdrs=allRows[0].map(h=>h.trim());
+  const rows=allRows.slice(1).map(r=>{
+    const obj={};
+    hdrs.forEach((h,i)=>obj[h]=(r[i]!==undefined?r[i]:''));
+    return obj;
+  }).filter(r=>Object.values(r).some(v=>v!==''));
+  return{hdrs,rows};
+}
+
+function coerceNum(v){
+  if(v===null||v===undefined||v==='')return null;
+  const s=String(v).replace(/[$,%\s]/g,'').replace(/K$/i,'000').replace(/M$/i,'000000').replace(/B$/i,'000000000');
+  const n=parseFloat(s);
+  return isNaN(n)?null:n;
+}
+
+function classifyCols(hdrs,rows){
+  const numCols=[],catCols=[],yearCols=[];
+  hdrs.forEach(h=>{
+    const vals=rows.map(r=>coerceNum(r[h])).filter(v=>v!==null);
+    const ratio=vals.length/rows.length;
+    if(ratio>=0.6){
+      numCols.push(h);
+      // Year detection: all values are integers in the range 1900–2026
+      const allInts=vals.every(v=>Number.isInteger(v));
+      const allYears=vals.length>0&&Math.min(...vals)>=1900&&Math.max(...vals)<=2026;
+      if(allInts&&allYears)yearCols.push(h);
+    } else {
+      catCols.push(h);
+    }
+  });
+  return{numCols,catCols,yearCols};
+}
+
+// ── YEAR COLUMN HELPER ──
+// Returns true if a column has been detected as a year column
+function isYearCol(h){ return(G.yearCols||[]).includes(h); }
+
+// ── STATISTICS ──
+function colStats(vals){
+  if(!vals.length)return{};
+  const sorted=[...vals].sort((a,b)=>a-b);
+  const n=vals.length,sum=vals.reduce((a,b)=>a+b,0),mean=sum/n;
+  const med=n%2?sorted[Math.floor(n/2)]:(sorted[n/2-1]+sorted[n/2])/2;
+  const variance=vals.reduce((a,b)=>a+(b-mean)**2,0)/n;
+  const std=Math.sqrt(variance);
+  const min=sorted[0],max=sorted[n-1];
+  const q1=sorted[Math.floor(n*0.25)],q3=sorted[Math.floor(n*0.75)];
+  const growth=n>1?((vals[n-1]-vals[0])/Math.abs(vals[0])*100):0;
+  const anomalies=vals.filter(v=>Math.abs(v-mean)>2*std).length;
+  return{n,sum,mean,med,std,min,max,q1,q3,growth,anomalies};
+}
+
+function fmtNum(n,prefix=''){
+  if(Math.abs(n)>=1000000)return prefix+(n/1000000).toFixed(1)+'M';
+  if(Math.abs(n)>=1000)return prefix+(n/1000).toFixed(1)+'K';
+  return prefix+n.toFixed(n%1?2:0);
+}
+
+function detectTrend(vals){
+  if(vals.length<2)return'stable';
+  const half=Math.floor(vals.length/2);
+  const firstHalf=vals.slice(0,half),secondHalf=vals.slice(half);
+  const avg1=firstHalf.reduce((a,b)=>a+b,0)/firstHalf.length;
+  const avg2=secondHalf.reduce((a,b)=>a+b,0)/secondHalf.length;
+  const pct=(avg2-avg1)/Math.abs(avg1)*100;
+  if(pct>10)return'upward';if(pct<-10)return'downward';return'stable';
+}
+
+// ── CHART COLORS ──
+function getColors(n){
+  const base=[G.accent,'#22d3ee','#f59e0b','#8b5cf6','#f43f5e','#10b981','#3b82f6','#ec4899','#14b8a6','#f97316'];
+  return Array.from({length:n},(_,i)=>base[i%base.length]);
+}
+function getDimColors(n){return getColors(n).map(c=>c+'55')}
+
+function chartDefaults(){
+  return{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#6b6b7a',font:{family:'Azeret Mono',size:10}}},tooltip:{backgroundColor:'#18181c',borderColor:'#2a2a32',borderWidth:1,titleColor:'#e8e8ee',bodyColor:'#6b6b7a',titleFont:{family:'Syne',weight:'bold'},bodyFont:{family:'Azeret Mono',size:11}}},
+    scales:{x:{ticks:{color:'#6b6b7a',font:{family:'Azeret Mono',size:10}},grid:{color:'#2a2a32'}},y:{ticks:{color:'#6b6b7a',font:{family:'Azeret Mono',size:10}},grid:{color:'#2a2a32'}}}
+  };
+}
+
+function makeChart(id,type,data,opts={}){
+  const ctx=document.getElementById(id);
+  if(!ctx)return null;
+  const key=id.replace(/[^0-9]/g,'')||id;
+  if(G.charts[key]){G.charts[key].destroy();G.charts[key]=null;}
+  const chartType=type==='area'?'line':type;
+  if(type==='area'&&data.datasets){data.datasets=data.datasets.map(d=>({...d,fill:true,backgroundColor:d.borderColor+'22'||G.accent+'22'}))}
+  const cfg={type:chartType,data,options:{...chartDefaults(),...opts}};
+  if(['doughnut','pie'].includes(type)){delete cfg.options.scales;cfg.options.plugins.legend.display=true}
+  G.charts[key]=new Chart(ctx,cfg);
+  return G.charts[key];
+}
+
+// ── MAIN ANALYSIS ──
+const THINK_MSGS=['Parsing your data…','Detecting patterns…','Computing statistics…','Generating insights…','Building visualizations…'];
+let thinkTimer=null;
+
+function runAnalysis(){
+  const raw=document.getElementById('pasteData').value.trim();
+  if(raw.length<10){showErr('Please drop a file or paste data first.');return}
+  showErr('');
+  const parsed=parseCSV(raw);
+  if(!parsed||parsed.rows.length<1){showErr('Could not parse data. Make sure it is valid CSV, TSV, or tabular text.');return}
+  G.parsed=parsed;G.headers=parsed.hdrs;G.rows=parsed.rows;
+  const{numCols,catCols,yearCols}=classifyCols(parsed.hdrs,parsed.rows);
+  G.numCols=numCols;G.catCols=catCols;G.yearCols=yearCols;
+  const btn=document.getElementById('runBtn');btn.disabled=true;btn.textContent='Analyzing…';
+  document.getElementById('resultsArea').classList.remove('show');
+  let mi=0;const th=document.getElementById('thinkBar');th.classList.add('show');
+  thinkTimer=setInterval(()=>{mi=(mi+1)%THINK_MSGS.length;document.getElementById('thinkMsg').textContent=THINK_MSGS[mi]},700);
+  setTimeout(()=>{
+    clearInterval(thinkTimer);th.classList.remove('show');
+    try{buildResults()}catch(e){showErr('Analysis error: '+e.message);console.error(e)}
+    btn.disabled=false;btn.textContent='Generate Insights →';
+  },2200);
+}
+
+function buildResults(){
+  const{headers,rows,numCols,catCols}=G;
+  const context=document.getElementById('bizContext').value;
+  const q=document.getElementById('userQ').value;
+  // compute stats per numeric col
+  const stats={};
+  numCols.forEach(h=>{
+    const vals=rows.map(r=>coerceNum(r[h])).filter(v=>v!==null);
+    stats[h]={vals,...colStats(vals)};
+  });
+  G.stats=stats;
+
+  // ── KPIs ──
+  const kpiCols=numCols.slice(0,5);
+  const kpis=kpiCols.map(h=>{
+    const s=stats[h];
+    const delta=s.growth!==undefined?`${s.growth>=0?'+':''}${s.growth.toFixed(1)}% growth`:null;
+    const dir=s.growth>5?'up':s.growth<-5?'down':'neu';
+    const guess=h.toLowerCase();
+    let prefix='';
+    if(guess.includes('revenue')||guess.includes('sales')||guess.includes('profit')||guess.includes('cost')||guess.includes('price')||guess.includes('spend'))prefix='$';
+    return{label:h,value:fmtNum(s.sum,prefix),delta,dir};
+  });
+  const kpiGrid=document.getElementById('kpiGrid');
+  kpiGrid.innerHTML=kpis.map(k=>`<div class="kpi-tile"><div class="kpi-label">${k.label}</div><div class="kpi-value">${k.value}</div>${k.delta?`<div class="kpi-delta ${k.dir}">${k.dir==='up'?'↑':k.dir==='down'?'↓':'→'} ${k.delta}</div>`:''}</div>`).join('');
+
+  // ── CHARTS ──
+  const labelCol=catCols[0]||headers[0];
+  const primaryNum=numCols[0];
+
+  // Apply aggregation — always cap to 25 points max for readability
+  const aggSettings=getAggSettings();
+  aggSettings.maxPoints=Math.min(aggSettings.maxPoints||25,25);
+  const{labels,aggRows,aggregated,originalCount,bucketSize,method}=aggregateData(rows,labelCol,numCols,aggSettings);
+  const colors=getColors(labels.length);
+
+  // Show/update aggregation notice
+  const existingNotice=document.getElementById('agg-notice');
+  if(existingNotice)existingNotice.remove();
+  if(aggregated){
+    const notice=document.createElement('div');
+    notice.id='agg-notice';
+    notice.style.cssText='font-family:var(--mono);font-size:11px;color:var(--acid);background:var(--acid-dim);border:1px solid rgba(198,241,53,0.2);border-radius:6px;padding:8px 14px;margin-bottom:12px;display:flex;align-items:center;gap:8px';
+    notice.innerHTML=`<span>⚡</span><span><strong>${originalCount} rows</strong> averaged into <strong>${labels.length} groups</strong> (~${bucketSize} rows/group) for readability. Adjust threshold in Settings.</span>`;
+    document.getElementById('kpiGrid').parentNode.insertBefore(notice,document.getElementById('kpiGrid'));
+  }
+
+  // ── SHARED HELPER: bucket a numeric column into N value-range bins ──
+  // Returns {bucketLabels, bucketValues} where values are counts or averages per bin.
+  function makeRangeBuckets(col, numBuckets, valueMode){
+    const allVals=rows.map(r=>coerceNum(r[col])).filter(v=>v!==null);
+    if(!allVals.length)return{bucketLabels:[],bucketVals:[]};
+    const mn=Math.min(...allVals), mx=Math.max(...allVals);
+    const range=mx-mn||1;
+    const step=range/numBuckets;
+    // each bucket: {count, sum}
+    const buckets=Array.from({length:numBuckets},()=>({count:0,sum:0}));
+    allVals.forEach(v=>{
+      const idx=Math.min(Math.floor((v-mn)/step), numBuckets-1);
+      buckets[idx].count++;
+      buckets[idx].sum+=v;
+    });
+    const bucketLabels=buckets.map((_,i)=>{
+      const lo=mn+i*step, hi=mn+(i+1)*step;
+      // Format nicely — round to 1 decimal if fractional
+      const fmt=v=>Math.abs(v)>=100?Math.round(v).toString():parseFloat(v.toFixed(1)).toString();
+      return fmt(lo)+'–'+fmt(hi);
+    });
+    const bucketVals=valueMode==='count'
+      ? buckets.map(b=>b.count)
+      : buckets.map(b=>b.count?parseFloat((b.sum/b.count).toFixed(2)):0); // avg
+    return{bucketLabels,bucketVals};
+  }
+
+  const NUM_BUCKETS=10; // consistent across all charts
+  const chartColors=getColors(NUM_BUCKETS);
+
+  // ── CHART 1: primary column — horizontal bar showing value ranges ──
+  if(primaryNum){
+    const{bucketLabels,bucketVals}=makeRangeBuckets(primaryNum, NUM_BUCKETS,'count');
+    G.chartData[1]={
+      labels:bucketLabels,
+      datasets:[{
+        label:'# of rows',
+        data:bucketVals,
+        backgroundColor:chartColors,
+        borderWidth:0,
+        borderRadius:4
+      }]
+    };
+    document.getElementById('chart1Title').textContent=primaryNum+' Value Ranges';
+    document.getElementById('chart1Sub').textContent=`Frequency distribution across ${rows.length} rows`;
+    makeChart('chart1','bar',structuredClone(G.chartData[1]));
+  }
+
+  // ── CHART 2: second numeric column — donut by value ranges ──
+  const secondNum=numCols[1]||numCols[0];
+  if(secondNum){
+    const{bucketLabels,bucketVals}=makeRangeBuckets(secondNum, NUM_BUCKETS,'count');
+    G.chartData[2]={
+      labels:bucketLabels,
+      datasets:[{data:bucketVals,backgroundColor:chartColors,borderWidth:0}]
+    };
+    document.getElementById('chart2Title').textContent=secondNum+' Value Ranges';
+    document.getElementById('chart2Sub').textContent='Frequency distribution';
+    makeChart('chart2','doughnut',structuredClone(G.chartData[2]),{
+      plugins:{legend:{display:true,position:'right',labels:{color:'#6b6b7a',font:{size:9,family:'Azeret Mono'},boxWidth:10,padding:6}}}
+    });
+  }
+
+  // ── CHART 3: multi-column avg per range bucket — line chart ──
+  // Groups ALL numeric cols into the same buckets as chart1 so they're comparable
+  const multiCols=numCols.slice(0,4);
+  if(multiCols.length>0){
+    // Use chart1's bucketLabels as the shared X axis
+    const{bucketLabels}=makeRangeBuckets(primaryNum||multiCols[0], NUM_BUCKETS,'count');
+    const mc=getColors(multiCols.length);
+    const ds=multiCols.map((col,i)=>{
+      const{bucketVals}=makeRangeBuckets(col, NUM_BUCKETS,'avg');
+      return{
+        label:col,
+        data:bucketVals,
+        borderColor:mc[i],
+        backgroundColor:mc[i]+'22',
+        borderWidth:2,
+        tension:0.4,
+        fill:false,
+        pointRadius:4,
+        pointBackgroundColor:mc[i]
+      };
+    });
+    G.chartData[3]={labels:bucketLabels,datasets:ds};
+    document.getElementById('chart3Title').textContent='Average per Value Range';
+    document.getElementById('chart3Sub').textContent='All numeric columns · '+NUM_BUCKETS+' buckets';
+    makeChart('chart3','line',structuredClone(G.chartData[3]));
+  }
+
+  // ── COLUMN STATS ──
+  const colStatEl=document.getElementById('colStats');
+  const fmtRaw=n=>Math.round(n).toLocaleString();
+  colStatEl.innerHTML=numCols.slice(0,6).map(h=>{
+    const s=stats[h];
+    if(!s||!s.n)return'';
+    return`<div class="col-stat-card">
+      <div class="col-stat-name">${h}</div>
+      <div class="col-stat-row"><span>Sum</span><span class="col-stat-val">${fmtRaw(s.sum)}</span></div>
+      <div class="col-stat-row"><span>Mean</span><span class="col-stat-val">${fmtRaw(s.mean)}</span></div>
+      <div class="col-stat-row"><span>Median</span><span class="col-stat-val">${fmtRaw(s.med)}</span></div>
+      <div class="col-stat-row"><span>Std Dev</span><span class="col-stat-val">${fmtRaw(s.std)}</span></div>
+      <div class="col-stat-row"><span>Min</span><span class="col-stat-val">${fmtRaw(s.min)}</span></div>
+      <div class="col-stat-row"><span>Max</span><span class="col-stat-val">${fmtRaw(s.max)}</span></div>
+      <div class="col-stat-row"><span>Anomalies</span><span class="col-stat-val" style="color:${s.anomalies?'var(--rose)':'var(--acid)'}">${s.anomalies}</span></div>
+    </div>`;
+  }).join('');
+
+  // ── DATA TABLE ──
+  G.allRows=[...rows];G.filteredRows=[...rows];
+  renderTable(headers,rows);
+  document.getElementById('tableCount').textContent=rows.length+' rows · '+headers.length+' columns';
+
+  // ── NARRATIVE ──
+  document.getElementById('narrativeBody').innerHTML=buildNarrative(stats,numCols,catCols,rows,context,q);
+
+  // ── RECOMMENDATIONS ──
+  buildRecs(stats,numCols,context);
+
+  // ── SAVE REPORT ──
+  const report={
+    id:Date.now(),ts:new Date().toLocaleString(),
+    fileName:document.getElementById('fileName').textContent||'Pasted Data',
+    rows:rows.length,cols:headers.length,
+    kpis,context,
+    narrative:document.getElementById('narrativeBody').innerHTML,
+    summary:`${rows.length} rows · ${headers.length} columns · ${numCols.length} numeric fields`
+  };
+  G.reports.unshift(report);if(G.reports.length>10)G.reports.pop();
+
+  document.getElementById('resultsArea').classList.add('show');
+  setTimeout(()=>document.getElementById('resultsArea').scrollIntoView({behavior:'smooth',block:'start'}),100);
+}
+
+// ── NARRATIVE BUILDER ──
+function buildNarrative(stats,numCols,catCols,rows,context,q){
+  if(!numCols.length)return'<p>No numeric columns detected. Please check your data format.</p>';
+
+  const fmt=n=>Math.round(n).toLocaleString();
+  const fmtD=n=>parseFloat(n.toFixed(1)).toLocaleString();
+
+  const colInsights=numCols.slice(0,5).map(h=>{
+    const s=stats[h];if(!s||!s.n)return null;
+    const trend=detectTrend(s.vals||[]);
+    const cv=s.mean?((s.std/s.mean)*100):0;
+    return{h,s,trend,cv};
+  }).filter(Boolean);
+
+  if(!colInsights.length)return'<p>Not enough data to generate insights.</p>';
+
+  const primary=colInsights[0];
+  const labelCol=catCols[0]||'';
+  const uniqueLabels=[...new Set(rows.map(r=>r[labelCol]))].length;
+  const p=primary.s;
+
+  // ── Helper: interpret what a mean value + spread actually means ──
+  function interpretCol(ci){
+    const{h,s,cv,trend}=ci;
+    const name=h.toLowerCase();
+    const mean=s.mean, mn=s.min, mx=s.max;
+    const diverse=cv>30;
+    const trendDir=trend==='upward'?'increasing':trend==='downward'?'decreasing':null;
+
+    // ── Year column — treat as time, not a numeric metric ──
+    if(isYearCol(h)){
+      const spanYears=Math.round(mx-mn);
+      const uniqueYears=[...new Set((s.vals||[]).map(v=>Math.round(v)))].sort((a,b)=>a-b);
+      if(spanYears===0) return`All records in <strong>${h}</strong> are from the year <strong>${Math.round(mn)}</strong> — this is a single-year snapshot rather than a multi-year dataset.`;
+      if(spanYears<=5) return`<strong>${h}</strong> spans a short window from <strong>${Math.round(mn)}</strong> to <strong>${Math.round(mx)}</strong> — a <strong>${spanYears}-year</strong> period, meaning this is a relatively recent and focused dataset.`;
+      return`<strong>${h}</strong> ranges from <strong>${Math.round(mn)}</strong> to <strong>${Math.round(mx)}</strong>, covering a <strong>${spanYears}-year</strong> span. This suggests the dataset captures long-term trends rather than a single moment in time.`;
+    }
+
+    // Build a contextual sentence based on what the column name suggests
+    if(name.includes('gpa')||name.includes('grade')||name.includes('score')||name.includes('result')){
+      if(diverse) return`Academic performance varies considerably — the average ${h} of <strong>${fmtD(mean)}</strong> masks a wide gap between the lowest-performing (<strong>${fmtD(mn)}</strong>) and highest-performing (<strong>${fmtD(mx)}</strong>) students, suggesting the group is academically mixed rather than homogeneous.`;
+      return`Academic performance is fairly consistent across the dataset, with the average ${h} sitting at <strong>${fmtD(mean)}</strong> and most values staying close to that mark — indicating a relatively uniform level of achievement.`;
+    }
+    if(name.includes('age')){
+      if(diverse) return`The age range spans from <strong>${fmt(mn)}</strong> to <strong>${fmt(mx)}</strong> with an average of <strong>${fmtD(mean)}</strong>, pointing to a multigenerational group where life stage and perspective likely differ meaningfully across records.`;
+      return`The group is relatively similar in age, averaging <strong>${fmtD(mean)}</strong> years — a narrow age range that suggests a fairly uniform demographic, which may mean shared experiences and similar contexts.`;
+    }
+    if(name.includes('freq')||name.includes('usage')||name.includes('use')||name.includes('hour')||name.includes('time')||name.includes('daily')||name.includes('week')){
+      if(diverse) return`${h} shows high variation — averaging <strong>${fmtD(mean)}</strong> but ranging from <strong>${fmtD(mn)}</strong> to <strong>${fmtD(mx)}</strong>, which means some people engage far more than others. This level of spread suggests the group holds very different habits or attitudes toward this activity, rather than a consistent behavioral pattern.`;
+      return`${h} is consistent across the group at around <strong>${fmtD(mean)}</strong>, suggesting most people engage with this activity at a similar rate — a sign of shared routine or comparable access.`;
+    }
+    if(name.includes('satisf')||name.includes('rating')||name.includes('review')||name.includes('sentiment')||name.includes('opinion')){
+      if(diverse) return`Sentiment is polarized — ${h} averages <strong>${fmtD(mean)}</strong> but spreads from <strong>${fmtD(mn)}</strong> to <strong>${fmtD(mx)}</strong>, meaning opinions are sharply divided rather than converging around a shared view. This suggests the subject is controversial or experienced very differently depending on the individual.`;
+      return`Sentiment is broadly positive and consistent — ${h} clusters around <strong>${fmtD(mean)}</strong> with little variation, which points to a shared and stable perception across the group.`;
+    }
+    if(name.includes('salary')||name.includes('income')||name.includes('wage')||name.includes('pay')||name.includes('revenue')||name.includes('profit')||name.includes('sales')){
+      if(diverse) return`Financial values in ${h} are widely spread — the average is <strong>${fmtD(mean)}</strong> but the gap between <strong>${fmt(mn)}</strong> and <strong>${fmt(mx)}</strong> signals a significant disparity, which likely reflects different levels, roles, or market segments within the data.`;
+      return`${h} is relatively stable at an average of <strong>${fmtD(mean)}</strong> — the narrow range from <strong>${fmt(mn)}</strong> to <strong>${fmt(mx)}</strong> suggests this group operates within a comparable band, with limited outlier performance at either end.`;
+    }
+    if(name.includes('count')||name.includes('number')||name.includes('total')||name.includes('amount')||name.includes('quantity')){
+      if(trendDir) return`${h} is <strong>${trendDir}</strong> across the dataset, moving from <strong>${fmt(s.vals[0])}</strong> to <strong>${fmt(s.vals[s.vals.length-1])}</strong> — a shift of <strong>${fmt(Math.abs(s.vals[s.vals.length-1]-s.vals[0]))}</strong> overall, suggesting a meaningful directional change worth tracking.`;
+      return`${h} averages <strong>${fmtD(mean)}</strong> and holds relatively steady, without a clear directional trend — indicating stable activity or volume across the dataset.`;
+    }
+    // Generic fallback — still makes a real interpretive statement
+    if(diverse) return`<strong>${h}</strong> shows meaningful variation across the dataset — the average of <strong>${fmtD(mean)}</strong> sits in the middle of a <strong>${fmtD(mn)}–${fmtD(mx)}</strong> range, and the spread suggests this dimension differs significantly from one record to the next, making it a likely driver of individual differences in the data.`;
+    return`<strong>${h}</strong> averages <strong>${fmtD(mean)}</strong> and stays fairly consistent across records — the narrow spread from <strong>${fmtD(mn)}</strong> to <strong>${fmtD(mx)}</strong> suggests this is a stable characteristic across the dataset.`;
+  }
+
+  // ── BUILD PARAGRAPHS ──
+  // P1 — dataset overview + primary column real insight
+  let html=`<p>This dataset contains <strong>${rows.length.toLocaleString()} records</strong>${labelCol&&uniqueLabels>1?' with <strong>'+uniqueLabels.toLocaleString()+' unique '+labelCol+' entries</strong>':''}. ${interpretCol(primary)}</p>`;
+
+  // P2 — second and third columns interpreted
+  if(colInsights.length>1){
+    const second=colInsights[1];
+    html+=`<br><p>${interpretCol(second)}`;
+    if(colInsights.length>2){
+      html+=` ${interpretCol(colInsights[2])}`;
+    }
+    html+=`</p>`;
+  }
+
+  // P3 — cross-column observation: what two columns together suggest
+  if(colInsights.length>=2){
+    const a=colInsights[0],b=colInsights[1];
+    const bothHigh=a.cv>30&&b.cv>30;
+    const bothLow=a.cv<15&&b.cv<15;
+    const oneUpOneDown=a.trend==='upward'&&b.trend==='downward'||a.trend==='downward'&&b.trend==='upward';
+    html+=`<br><p>`;
+    if(bothHigh){
+      html+=`Both <strong>${a.h}</strong> and <strong>${b.h}</strong> show high individual variation, which suggests the records in this dataset represent genuinely diverse cases rather than a uniform group — segmenting the data further would likely reveal distinct subgroups with meaningfully different profiles.`;
+    } else if(bothLow){
+      html+=`Both <strong>${a.h}</strong> and <strong>${b.h}</strong> are consistent across the dataset, pointing to a fairly homogeneous group where most records share similar characteristics — which can make it easier to apply uniform strategies or conclusions.`;
+    } else if(oneUpOneDown){
+      html+=`There is a notable contrast between <strong>${a.h}</strong> and <strong>${b.h}</strong> — one trends upward while the other trends downward across the dataset. This kind of inverse relationship often signals a trade-off or tension worth investigating more closely.`;
+    } else {
+      const strongTrend=colInsights.find(c=>c.trend!=='stable');
+      if(strongTrend){
+        html+=`<strong>${strongTrend.h}</strong> shows a clear ${strongTrend.trend} direction across the dataset — moving from <strong>${fmt(strongTrend.s.vals[0])}</strong> to <strong>${fmt(strongTrend.s.vals[strongTrend.s.vals.length-1])}</strong>. This trajectory is the most action-relevant signal in the data and likely the best starting point for deeper investigation.`;
+      } else {
+        html+=`Across all numeric columns, the data is relatively stable with no single dramatic trend — which suggests the population or time period captured here is in a steady state rather than a period of rapid change.`;
+      }
+    }
+    html+=`</p>`;
+  }
+
+  // P4 — context-specific takeaway with real numbers
+  const ctxInsights={
+    sales:`<br><p>From a sales lens, the average <strong>${primary.h}</strong> of <strong>${fmtD(p.mean)}</strong> ${primary.trend==='upward'?'points to growing momentum — the conditions driving this increase should be identified and reinforced':'is declining, which calls for a focused review of which segments or time periods are underperforming and why'}.</p>`,
+    finance:`<br><p>Financially, the <strong>${fmt(p.max-p.min)}</strong> spread in <strong>${primary.h}</strong> between the minimum and maximum values reflects ${p.std/p.mean>0.3?'significant variance that warrants tighter controls or scenario planning':'manageable volatility within an acceptable operating range'}.</p>`,
+    marketing:`<br><p>From a marketing perspective, the average <strong>${primary.h}</strong> of <strong>${fmtD(p.mean)}</strong> ${primary.trend==='upward'?'suggests current efforts are compounding over time — doubling down on what is working now will likely accelerate returns':'signals diminishing performance, which may point to audience fatigue or a need to test new messaging or channels'}.</p>`,
+    saas:`<br><p>For a SaaS product, a <strong>${primary.h}</strong> average of <strong>${fmtD(p.mean)}</strong> with ${primary.cv>20?'high spread suggests users engage with the product very differently — a strong signal that persona-based onboarding or feature targeting could significantly improve activation and retention':'low spread suggests consistent product usage, which is a healthy indicator of a well-defined core use case'}.</p>`,
+    hr:`<br><p>Across the workforce, the average <strong>${primary.h}</strong> of <strong>${fmtD(p.mean)}</strong> ${primary.cv>25?'varies enough across employees to suggest meaningful differences in team composition, tenure, or performance — which may warrant segmented management approaches':'is consistent enough to suggest a relatively uniform workforce profile in this dimension'}.</p>`,
+    general:''
+  };
+  html+=ctxInsights[context]||'';
+
+  // P5 — user question
+  if(q){
+    html+=`<br><p><strong>On your question</strong> ("${q}"): The most relevant signal is <strong>${primary.h}</strong> averaging <strong>${fmtD(p.mean)}</strong>${primary.trend!=='stable'?` with a clear ${primary.trend} direction`:''} — cross-referencing this against ${colInsights.length>1?colInsights[1].h:'other columns'} will likely give you the clearest answer.</p>`;
+  }
+
+  return html;
+}
+
+// ── RECOMMENDATIONS ──
+function buildRecs(stats,numCols,context){
+  const recs=[];
+  const primary=numCols[0];
+  const s=stats[primary]||{};
+  const trend=detectTrend(s.vals||[]);
+
+  if(trend==='downward')recs.push({priority:'Critical',color:'var(--rose)',title:`Investigate declining ${primary}`,body:`${primary} shows a downward trend of ${Math.abs(s.growth||0).toFixed(1)}%. Immediate root-cause analysis recommended — segment by time period and category to isolate the driver.`});
+  else if(trend==='upward')recs.push({priority:'Positive',color:'var(--acid)',title:`Capitalize on ${primary} growth`,body:`${primary} is trending up ${(s.growth||0).toFixed(1)}%. Double down on what's working — identify the highest-performing segments and allocate resources accordingly.`});
+
+  const anomalyCol=numCols.find(h=>stats[h]&&stats[h].anomalies>0);
+  if(anomalyCol)recs.push({priority:'High',color:'var(--amber)',title:`Investigate anomalies in ${anomalyCol}`,body:`${stats[anomalyCol].anomalies} data points fall outside 2 standard deviations. These could represent data quality issues, exceptional events, or early warning signals.`});
+
+  if(numCols.length>1){
+    const s2=stats[numCols[1]];
+    const t2=detectTrend(s2?.vals||[]);
+    if(t2!==trend)recs.push({priority:'Medium',color:'var(--cyan)',title:`Divergence between ${numCols[0]} and ${numCols[1]}`,body:`${numCols[0]} is ${trend} while ${numCols[1]} is ${t2}. This divergence often signals a lag effect or efficiency gap worth investigating.`});
+  }
+
+  const ctxRecs={
+    sales:[{priority:'Action',color:'var(--violet)',title:'Set up monthly trend alerts',body:'With this data volume, establish automated alerts for when key metrics deviate more than 10% from moving averages.'}],
+    finance:[{priority:'Action',color:'var(--violet)',title:'Model forward projections',body:'Use the growth rate trend to build a 3-6 month rolling projection. Compare actuals vs projections monthly to improve forecast accuracy.'}],
+    saas:[{priority:'Action',color:'var(--violet)',title:'Segment cohort analysis',body:'Break down these metrics by customer cohort or acquisition date to identify which segments are driving overall performance.'}],
+    general:[{priority:'Action',color:'var(--violet)',title:'Add temporal context',body:'If your data has date columns, sorting chronologically will surface trend patterns more clearly and enable period-over-period comparison.'}]
+  };
+  recs.push(...(ctxRecs[context]||ctxRecs.general));
+  recs.push({priority:'Best Practice',color:'var(--muted)',title:'Export and share this analysis',body:'Use the "Copy Report" button to get a text summary, or "Export JSON" to share the full structured data with your team.'});
+
+  document.getElementById('recsGrid').innerHTML=recs.slice(0,6).map(r=>`<div class="rec-card"><div class="rec-card-accent" style="background:${r.color}"></div><div><div class="rec-priority" style="background:${r.color}22;color:${r.color}">${r.priority}</div><div class="rec-title">${r.title}</div><div class="rec-body">${r.body}</div></div></div>`).join('');
+}
+
+let sortCol=null,sortDir=1;
+function renderTable(hdrs,rows){
+  document.getElementById('tableHead').innerHTML='<tr>'+hdrs.map(h=>`<th onclick="sortTable('${h}')">${h} <span style="opacity:0.4;font-size:8px">${sortCol===h?(sortDir>0?'↑':'↓'):'↕'}</span></th>`).join('')+'</tr>';
+  const numSet=new Set(G.numCols);
+  document.getElementById('tableBody').innerHTML=rows.map(r=>'<tr>'+hdrs.map(h=>{
+    const v=r[h];const n=coerceNum(v);
+    if(n!==null&&numSet.has(h))return`<td class="td-num">${fmtNum(n)}</td>`;
+    return`<td>${v||'—'}</td>`;
+  }).join('')+'</tr>').join('');
+}
+function sortTable(col){
+  if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=1;}
+  const numSet=new Set(G.numCols);
+  G.filteredRows.sort((a,b)=>{
+    const av=numSet.has(col)?coerceNum(a[col]):a[col];
+    const bv=numSet.has(col)?coerceNum(b[col]):b[col];
+    if(av===null)return 1;if(bv===null)return-1;
+    return(av>bv?1:-1)*sortDir;
+  });
+  renderTable(G.headers,G.filteredRows);
+}
+function filterTable(q){
+  const sq=q.toLowerCase();
+  G.filteredRows=q?G.allRows.filter(r=>Object.values(r).some(v=>String(v).toLowerCase().includes(sq))):G.allRows;
+  renderTable(G.headers,G.filteredRows);
+  document.getElementById('tableCount').textContent=G.filteredRows.length+' of '+G.allRows.length+' rows · '+G.headers.length+' columns';
+}
+
+// ── CHART SWITCHING ──
+function switchChart(n,type,btn){
+  const prefix=n<=3?'chart':'dashChart';
+  const id=prefix+n;
+  btn.closest('.chart-type-switcher').querySelectorAll('.cts-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(!G.chartData[n])return;
+  const data=structuredClone(G.chartData[n]);
+  if(type==='area'&&data.datasets)data.datasets=data.datasets.map(d=>({...d,fill:true,backgroundColor:(d.borderColor||G.accent)+'22'}));
+  const key=id.replace(/[^0-9]/g,'');
+  if(G.charts[key]){G.charts[key].destroy();G.charts[key]=null;}
+  G.charts[key]=makeChart(id,type,data);
+}
+
+// ── DASHBOARD ──
+function sendToDash(){G._dashReady=true;showPage('dashboard')}
+function refreshDash(){renderDash()}
+function renderDash(){
+  if(!G.rows||!G.rows.length){document.getElementById('dashEmpty').style.display='flex';document.getElementById('dashFull').classList.remove('show');return}
+  document.getElementById('dashEmpty').style.display='none';document.getElementById('dashFull').classList.add('show');
+  document.getElementById('dashRefreshBtn').style.display='block';
+  const fname=document.getElementById('fileName').textContent||'Data Analysis';
+  document.getElementById('dashTitle').textContent=fname;
+  document.getElementById('dashSubtitle').textContent=G.rows.length+' rows · '+G.headers.length+' columns · '+new Date().toLocaleString();
+
+  // KPI tiles — always use full dataset stats
+  const kpis=G.numCols.slice(0,5).map(h=>{const s=G.stats?.[h];if(!s)return'';return`<div class="dash-kpi"><div class="dash-kpi-val">${Math.round(s.mean).toLocaleString()}</div><div class="dash-kpi-lbl">${h} · avg</div><div class="dash-kpi-trend" style="color:${(s.growth||0)>=0?'var(--acid)':'var(--rose)'}">${(s.growth||0)>=0?'↑':'↓'} ${Math.abs(s.growth||0).toFixed(1)}%</div></div>`}).join('');
+  document.getElementById('dashKpis').innerHTML=kpis;
+
+  const rows=G.rows, numCols=G.numCols;
+  const DASH_BUCKETS=10;
+  const dashColors=getColors(DASH_BUCKETS);
+
+  // ── Shared bucket helper (mirrors analyzer) ──
+  function dashBuckets(col, valueMode){
+    const allVals=rows.map(r=>coerceNum(r[col])).filter(v=>v!==null);
+    if(!allVals.length)return{bl:[],bv:[]};
+    const mn=Math.min(...allVals),mx=Math.max(...allVals),range=mx-mn||1;
+    const step=range/DASH_BUCKETS;
+    const buckets=Array.from({length:DASH_BUCKETS},()=>({count:0,sum:0}));
+    allVals.forEach(v=>{const i=Math.min(Math.floor((v-mn)/step),DASH_BUCKETS-1);buckets[i].count++;buckets[i].sum+=v;});
+    const fmt=v=>Math.abs(v)>=100?Math.round(v).toString():parseFloat(v.toFixed(1)).toString();
+    const bl=buckets.map((_,i)=>fmt(mn+i*step)+'–'+fmt(mn+(i+1)*step));
+    const bv=valueMode==='count'?buckets.map(b=>b.count):buckets.map(b=>b.count?parseFloat((b.sum/b.count).toFixed(2)):0);
+    return{bl,bv};
+  }
+
+  const primary=numCols[0];
+  const sec=numCols[1]||numCols[0];
+  const multiCols=numCols.slice(0,3);
+
+  // Chart 1 — primary column, bar, value ranges
+  if(primary){
+    const{bl,bv}=dashBuckets(primary,'count');
+    G.chartData.d1={labels:bl,datasets:[{label:'# of rows',data:bv,backgroundColor:dashColors,borderWidth:0,borderRadius:4}]};
+    document.getElementById('dashChart1Title').textContent=primary+' Value Ranges';
+    if(G.charts.d1){G.charts.d1.destroy();}
+    G.charts.d1=makeChart('dashChart1','bar',structuredClone(G.chartData.d1));
+  }
+
+  // Chart 2 — second column, donut, value ranges
+  if(sec){
+    const{bl,bv}=dashBuckets(sec,'count');
+    G.chartData.d2={labels:bl,datasets:[{data:bv,backgroundColor:dashColors,borderWidth:0}]};
+    document.getElementById('dashChart2Title').textContent=sec+' Distribution';
+    if(G.charts.d2){G.charts.d2.destroy();}
+    G.charts.d2=makeChart('dashChart2','doughnut',structuredClone(G.chartData.d2),{plugins:{legend:{display:true,position:'bottom',labels:{color:'#6b6b7a',font:{size:9,family:'Azeret Mono'},boxWidth:10,padding:6}}}});
+  }
+
+  // Chart 3 — all numeric cols averaged per bucket, line
+  if(multiCols.length){
+    const{bl}=dashBuckets(primary||multiCols[0],'count');
+    const mc=getColors(multiCols.length);
+    const ds3=multiCols.map((col,i)=>{
+      const{bv}=dashBuckets(col,'avg');
+      return{label:col,data:bv,borderColor:mc[i],backgroundColor:mc[i]+'22',borderWidth:2,tension:0.4,fill:false,pointRadius:4,pointBackgroundColor:mc[i]};
+    });
+    G.chartData.d3={labels:bl,datasets:ds3};
+    document.getElementById('dashChart3Title').textContent='Average per Value Range';
+    if(G.charts.d3){G.charts.d3.destroy();}
+    G.charts.d3=makeChart('dashChart3','line',structuredClone(G.chartData.d3));
+  }
+
+  // Data table
+  document.getElementById('dashThead').innerHTML='<tr>'+G.headers.slice(0,8).map(h=>`<th>${h}</th>`).join('')+'</tr>';
+  const numSet=new Set(G.numCols);
+  document.getElementById('dashTbody').innerHTML=G.rows.map(r=>'<tr>'+G.headers.slice(0,8).map(h=>{const v=r[h];const n=coerceNum(v);return n!==null&&numSet.has(h)?`<td class="td-num">${fmtNum(n)}</td>`:`<td>${v||'—'}</td>`}).join('')+'</tr>').join('');
+}
+
+// ── REPORTS ──
+function renderReports(){
+  const el=document.getElementById('repList');
+  const em=document.getElementById('repEmpty');
+  if(!G.reports.length){em.style.display='flex';el.classList.remove('show');return}
+  em.style.display='none';el.classList.add('show');
+  el.innerHTML=G.reports.map(r=>`<div class="report-item">
+    <div class="report-item-icon">📊</div>
+    <div class="report-item-body">
+      <div class="report-item-title">${r.fileName}</div>
+      <div class="report-item-meta">${r.ts} · ${r.summary} · Context: ${r.context}</div>
+    </div>
+    <div class="report-item-actions">
+      <button class="act-btn" onclick="copyReportItem(${r.id})">Copy</button>
+      <button class="act-btn" style="color:var(--rose);border-color:var(--rose)" onclick="deleteReport(${r.id})">Delete</button>
+    </div>
+  </div>`).join('');
+}
+function copyReportItem(id){
+  const r=G.reports.find(x=>x.id===id);if(!r)return;
+  const txt=`InsightFlow Analysis Report\n${'─'.repeat(40)}\nFile: ${r.fileName}\nDate: ${r.ts}\n${r.summary}\n\nContext: ${r.context}\n\nKPIs:\n${r.kpis.map(k=>`  ${k.label}: ${k.value} ${k.delta||''}`).join('\n')}`;
+  navigator.clipboard.writeText(txt).then(()=>alert('Report copied to clipboard!'));
+}
+function deleteReport(id){G.reports=G.reports.filter(r=>r.id!==id);renderReports()}
+function clearReports(){if(confirm('Clear all reports?')){G.reports=[];renderReports()}}
+
+// ── EXPORT ──
+function copyReport(){
+  if(!G.rows)return;
+  const s=G.numCols[0]?G.stats[G.numCols[0]]:{};
+  const txt=`InsightFlow Business Intelligence Report\n${'═'.repeat(40)}\nDataset: ${G.rows.length} rows · ${G.headers.length} columns\nNumeric fields: ${G.numCols.join(', ')}\n\nKey Metrics:\n${G.numCols.slice(0,5).map(h=>{const st=G.stats[h];return`  ${h}: Total ${fmtNum(st.sum)} | Mean ${fmtNum(st.mean)} | Growth ${(st.growth||0).toFixed(1)}%`}).join('\n')}\n\nColumns: ${G.headers.join(', ')}`;
+  navigator.clipboard.writeText(txt).then(()=>{const b=event.target;b.textContent='Copied!';setTimeout(()=>b.textContent='Copy Report',1500)});
+}
+function exportJSON(){
+  if(!G.rows)return;
+  const out={metadata:{rows:G.rows.length,columns:G.headers.length,numericColumns:G.numCols,categoricalColumns:G.catCols,generatedAt:new Date().toISOString()},statistics:Object.fromEntries(G.numCols.map(h=>[h,{...G.stats[h],vals:undefined}])),data:G.rows};
+  const blob=new Blob([JSON.stringify(out,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='insightflow-export.json';a.click();
+}
+function resetAll(){
+  document.getElementById('pasteData').value='';clearFile();
+  document.getElementById('resultsArea').classList.remove('show');
+  document.getElementById('errBox').style.display='none';
+  G.parsed=null;G.rows=[];G.headers=[];
+}
+function showErr(msg){const e=document.getElementById('errBox');e.textContent=msg;e.style.display=msg?'block':'none'}
+
+// ── SETTINGS ──
+function setAccent(c1,c2,el){
+  G.accent=c1;G.accent2=c2;
+  document.documentElement.style.setProperty('--acid',c1);
+  document.documentElement.style.setProperty('--acid2',c2);
+  document.documentElement.style.setProperty('--acid-dim',c1+'14');
+  document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
+}
+function clearAll(){if(confirm('Clear all data and reports?')){G.reports=[];G.parsed=null;G.rows=[];G.headers=[];resetAll();renderReports()}}
+
+// Init settings on load
+if(document.getElementById('s-aggregate'))loadAggSettings();
+</script>
+</body>
+</html>
