@@ -161,8 +161,9 @@ textarea.data-paste:focus{background:var(--card)}
 /* CONTEXT ROW */
 .context-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:1.5rem}
 @media(max-width:600px){.context-row{grid-template-columns:1fr}}
+.field-group{}
 .field-lbl{font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;display:block}
-select,input[type=text]{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:9px 12px;font-family:var(--mono);font-size:12px;color:var(--text);outline:none;transition:border-color 0.15s;appearance:none}
+select,input[type=text]{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:9px 12px;font-family:var(--mono);font-size:12px;color:var(--text);outline:none;transition:border-color 0.15s;-webkit-appearance:none}
 select:focus,input[type=text]:focus{border-color:var(--acid)}
 select option{background:var(--card)}
 
@@ -788,6 +789,21 @@ Feb,138000,91000,47000,1380
   </div>
 
   <div class="settings-section">
+    <div class="settings-section-hdr" style="display:flex;align-items:center;justify-content:space-between">
+      <div class="settings-section-title">Narrative Focus</div>
+      <span style="font-family:var(--mono);font-size:9px;color:var(--acid);letter-spacing:0.1em;text-transform:uppercase">Applied to every analysis</span>
+    </div>
+    <div style="padding:16px">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.6">Choose the lens InsightFlow uses when writing insights. This shapes how it interprets your data — the same numbers read very differently depending on whether you are looking at a business, a classroom, or a product.</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px" id="contextCards"></div>
+      <div style="margin-top:14px;padding:12px 14px;background:var(--card);border-radius:6px;border:1px solid var(--border)">
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--acid);margin-bottom:6px">Current focus: <span id="currentContextLabel">General Business</span></div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.6" id="currentContextDesc">Balanced analysis across all dimensions — works for any dataset without domain-specific assumptions.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="settings-section">
     <div class="settings-section-hdr"><div class="settings-section-title">Analysis Defaults</div></div>
     <div class="settings-row">
       <div><div class="settings-row-label">Auto-detect number formats</div><div class="settings-row-sub">Recognize $, %, K, M suffixes automatically</div></div>
@@ -900,6 +916,56 @@ Feb,138000,91000,47000,1380
 </div>
 
 <script>
+// ── NARRATIVE CONTEXT SETTINGS ──
+const CONTEXTS=[
+  {value:'general',  label:'General',     icon:'◎', color:'var(--acid)',   desc:'Balanced analysis across all dimensions — works for any dataset without domain-specific assumptions.'},
+  {value:'sales',    label:'Sales',        icon:'↗', color:'var(--cyan)',   desc:'Frames insights around revenue, pipeline health, conversion, and growth trajectory.'},
+  {value:'finance',  label:'Finance',      icon:'$', color:'var(--amber)',  desc:'Focuses on variance, volatility, cost ranges, and financial risk signals.'},
+  {value:'marketing',label:'Marketing',    icon:'◈', color:'#ec4899',      desc:'Interprets data through campaign performance, audience behavior, and engagement trends.'},
+  {value:'saas',     label:'SaaS',         icon:'⬡', color:'var(--violet)', desc:'Reads metrics as product usage signals — activation, retention, and feature engagement.'},
+  {value:'hr',       label:'HR',           icon:'◇', color:'#10b981',      desc:'Contextualizes data around workforce composition, performance, and organizational patterns.'},
+  {value:'ecommerce',label:'E-Commerce',   icon:'◆', color:'#f97316',      desc:'Focuses on order volume, product performance, customer behavior, and purchase patterns.'},
+  {value:'education',label:'Education',    icon:'✦', color:'#38bdf8',      desc:'Reads data as student performance, engagement, and academic outcome signals.'},
+];
+
+function renderContextCards(){
+  const saved=localStorage.getItem('if_context')||'general';
+  const el=document.getElementById('contextCards');
+  if(!el)return;
+  el.innerHTML=CONTEXTS.map(c=>`
+    <div onclick="selectContext('${c.value}')" id="ctx-card-${c.value}" style="
+      border:1.5px solid ${saved===c.value?c.color:'var(--border)'};
+      border-radius:8px;padding:14px 12px;cursor:pointer;
+      background:${saved===c.value?c.color+'14':'var(--card)'};
+      transition:all 0.15s;position:relative;overflow:hidden">
+      <div style="font-size:18px;margin-bottom:6px">${c.icon}</div>
+      <div style="font-family:var(--syne);font-size:13px;font-weight:700;color:${saved===c.value?c.color:'var(--text)'};margin-bottom:3px">${c.label}</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--muted);line-height:1.4;letter-spacing:0.03em">${c.desc.split('—')[0].trim()}</div>
+      ${saved===c.value?`<div style="position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%;background:${c.color}"></div>`:''}
+    </div>`).join('');
+  // Sync the label and desc at the bottom
+  const active=CONTEXTS.find(c=>c.value===saved)||CONTEXTS[0];
+  const lbl=document.getElementById('currentContextLabel');
+  const dsc=document.getElementById('currentContextDesc');
+  if(lbl)lbl.textContent=active.label;
+  if(dsc)dsc.textContent=active.desc;
+  // Sync the analyzer dropdown too
+  const az=document.getElementById('bizContext');
+  if(az)az.value=saved;
+}
+
+function selectContext(value){
+  localStorage.setItem('if_context',value);
+  renderContextCards();
+}
+
+function getActiveContext(){
+  return localStorage.getItem('if_context')||'general';
+}
+
+// Init cards if on settings page
+if(document.getElementById('contextCards'))renderContextCards();
+
 // ── AGGREGATION SETTINGS ──
 function saveAggSettings(){
   const cfg={
@@ -1230,7 +1296,7 @@ function runAnalysis(){
 
 function buildResults(){
   const{headers,rows,numCols,catCols}=G;
-  const context=document.getElementById('bizContext').value;
+  const context=getActiveContext()||document.getElementById('bizContext').value;
   const q=document.getElementById('userQ').value;
   // compute stats per numeric col
   const stats={};
@@ -1742,6 +1808,11 @@ function clearAll(){if(confirm('Clear all data and reports?')){G.reports=[];G.pa
 
 // Init settings on load
 if(document.getElementById('s-aggregate'))loadAggSettings();
+// Sync analyzer dropdown to saved context
+const _savedCtx=localStorage.getItem('if_context');
+if(_savedCtx&&document.getElementById('bizContext'))document.getElementById('bizContext').value=_savedCtx;
+// Also render context cards if on settings page
+if(document.getElementById('contextCards'))renderContextCards();
 </script>
 </body>
 </html>
